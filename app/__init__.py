@@ -1,0 +1,1 @@
+"""Intelli-Credit application package."""
