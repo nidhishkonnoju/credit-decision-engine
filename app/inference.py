@@ -7,6 +7,7 @@ from typing import Any
 import pandas as pd
 
 from app.modeling import summarize_decision
+from app.preprocessing import handle_missing_sentinels
 
 
 def load_applicant_json(path: str | Path, feature_columns: list[str]) -> pd.DataFrame:
@@ -26,6 +27,12 @@ def load_applicant_json(path: str | Path, feature_columns: list[str]) -> pd.Data
 
 def predict_applicant(model_result: dict[str, Any], applicant: pd.DataFrame) -> dict[str, Any]:
     """Generate a thresholded decision and SHAP reasons for one applicant."""
+    feature_columns = model_result["raw_feature_columns"]
+    missing = [column for column in feature_columns if column not in applicant.columns]
+    if missing:
+        raise ValueError(f"Applicant input is missing model fields: {', '.join(missing)}")
+
+    applicant = handle_missing_sentinels(applicant[feature_columns])
     return summarize_decision(
         model_result["model"],
         model_result["preprocessor"],

@@ -76,6 +76,7 @@ def fit_credit_model(data: dict[str, Any]) -> dict[str, Any]:
     return {
         "model": model,
         "preprocessor": data["preprocessor"],
+        "raw_feature_columns": data["feature_columns"],
         "feature_names": feature_names,
         "metrics": final_metrics,
         "threshold": threshold_result["threshold"],

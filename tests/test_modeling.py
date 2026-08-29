@@ -2,6 +2,7 @@ import unittest
 
 from sklearn.model_selection import train_test_split
 
+from app.inference import predict_applicant
 from app.modeling import evaluate_model, fit_credit_model, find_best_threshold, summarize_decision
 from app.preprocessing import build_preprocessed_data
 
@@ -57,6 +58,16 @@ class ModelingSmokeTest(unittest.TestCase):
         encoded_names = self.model_result["preprocessor"].get_feature_names_out().tolist()
         self.assertTrue(all(name in encoded_names for name in feature_names))
         self.assertTrue(all(not name.startswith("feature_") for name in feature_names))
+
+    def test_inference_handles_training_sentinels_and_missing_fields(self):
+        applicant = self.data["X_test"].iloc[[0]].copy()
+        applicant["num_sub"] = -99999
+        result = predict_applicant(self.model_result, applicant)
+        self.assertIn(result["decision"], {"APPROVE", "REJECT"})
+
+        incomplete = applicant.drop(columns=[self.data["feature_columns"][0]])
+        with self.assertRaises(ValueError):
+            predict_applicant(self.model_result, incomplete)
 
     def test_evaluation_and_thresholding_outputs_are_valid(self):
         metrics = evaluate_model(
