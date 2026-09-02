@@ -1,153 +1,207 @@
-# AI-Driven Credit Risk Assessment with Automated Credit Appraisal Memo (CAM) Generation
+# AI-Driven Credit Risk Assessment with Explainability and Operational Triage
 
 ## 1. Overview
 
-Financial institutions rely on credit scoring to minimize risk, but modern Machine Learning (ML) models operate as **black boxes**. High accuracy often comes at the cost of explainability. Bank risk committees need actionable artifacts, not just raw probabilities.
+This project addresses a core problem in credit underwriting: a model can look highly predictive in a lab, yet still fail as a usable decision tool if the label is not an independent default outcome and if the output cannot be communicated clearly to a human decision-maker.
 
-Under RBI's Fair Practices Code (and global equivalents like ECOA), rejected loan applicants are legally entitled to specific, communicable reasons for denial.
+The project therefore combines three components into one operational workflow:
 
-**Pipeline:**
-```
-Applicant Profile (raw applicant profile & credit documents)
-        |
-Machine Learning (SMOTE + XGBoost)
-        |
-Explainability (SHAP feature attributions)
-        |
-Output: Plain-language Credit Appraisal Memo (CAM)
-```
+1. a leakage-aware underwriting model trained on an audit-safe feature set,
+2. SHAP-based local explanations filtered to stable features,
+3. a bank-officer-friendly decision layer with APPROVE / REVIEW / REJECT output and a plain-language CAM.
 
-The goal is to synthesize predictive performance, class balancing, and explainability into a unified pipeline that outputs an actionable, legally compliant Credit Appraisal Memo — not just a risk score.
+This is not a generic default-risk benchmark. It is a practical underwriter support tool for an existing bureau-plus-bank underwriting tier, designed to be credible, explainable, and operationally usable.
 
 ---
 
-## 2. The Problem
+## 2. The core problem
 
-- **Black-Box Algorithms** — Highly accurate ML models (like XGBoost) are mathematically opaque, making them difficult to audit or trust for high-stakes financial lending decisions.
-- **Dataset Imbalance** — Real-world default rates are very low (typically 6–10%). Without balancing techniques, naive models simply approve everyone to achieve artificially high baseline accuracy.
-- **Inactionable XAI Outputs** — Existing Explainable AI frameworks produce complex mathematical visualizations (e.g., Force Plots) that loan officers and layperson applicants cannot decipher.
-- **Fragmented Systems** — Current industry approaches treat predictive performance, fairness, and explainability as separate, isolated steps rather than synthesizing them into a deployable decision artifact.
+The project encountered the most important failure mode in credit risk modeling: the target label itself can contain underwriting information. If the target is an internal approval tier, then the model can learn directly from the underwriting logic rather than from actual borrower default behavior.
 
----
+The implications are severe:
 
-## 3. Problem Statement
+- model AUC can become unrealistically high even when the feature set is effectively encoding the label assignment process,
+- the model learns proxy patterns instead of independent risk drivers,
+- the resulting output looks “accurate” but is not defensible as a true credit-risk model.
 
-**Design an explainable AI system that evaluates applicant default risk and generates a structured Credit Appraisal Memo (CAM) for bank credit officers and loan applicants to ensure fast, actionable, and legally compliant lending decisions.**
-
-```
-Applicant Data (financial & demographic records)
-        -->
-Explainable AI: XGBoost + SHAP (risk scoring & feature extraction)
-        -->
-Credit Appraisal Memo (automated risk justification)
-```
-
-- **Target users:** Bank risk committees, loan officers, & applicants
-- **Input:** Tabular applicant financial data
-- **Output:** Credit Appraisal Memo
+This is why the first major contribution of the project is a structured leakage audit rather than just a model score.
 
 ---
 
-## 4. Related Work / Research Gaps
+## 3. Methodological contribution: the leakage audit as a product feature
 
-| Approach | Limitation | What This Project Does Differently |
-|---|---|---|
-| Stacked Ensemble + SMOTE + SHAP | Explanations remain as raw visual plots | Translate raw SHAP data into a plain-language CAM |
-| XGBoost SHAP-stability studies | Mid-importance features show high SHAP instability | Restrict CAM text generation strictly to bootstrap-stable features |
-| DT/RF + LIME/SHAP for decision support | Explanations are not tailored to specific stakeholders | Generate dual-audience outputs (internal memo vs. applicant letter) |
-| Systematic reviews of performance/fairness/XAI | Absence of unified frameworks that co-optimize all pillars | Synthesize scoring and explainability into a single deployable artifact |
-| TabTransformer + weighted loss + SHAP | High computational complexity; specific to tabular data | Use SMOTE for model-agnostic imbalance handling to save compute |
+The project’s strongest claim is not merely that it fixed a bug. It is that it explicitly identified and removed underwriting leakage before model training.
 
-**Research gaps being addressed:**
-- **G1 — Impractical XAI outputs:** raw SHAP plots aren't understood by non-technical stakeholders or applicants.
-- **G2 — Unstable attributions:** using all SHAP features leads to noisy, unstable explanations for mid-tier features under random initialization.
-- **G3 — Imbalance-handling overhead:** deep-learning approaches to class imbalance are expensive; model-agnostic resampling (SMOTE) is cheaper.
-- **G4 — Lack of unified frameworks:** predictive performance, fairness, and explainability are usually treated as isolated steps rather than one deployable artifact.
+The audited methodology is straightforward:
 
----
+- identify suspicious fields that are functionally tied to underwriting or bureau score assignment,
+- test whether a shallow model can recover the target label from those fields with extremely high AUC,
+- remove those fields as part of the feature policy,
+- retrain and re-evaluate the final model on a defensible feature set.
 
-## 5. Objectives
+This is the central contribution because it turns an otherwise fragile score into a credible underwriting classifier built on a cleaned feature policy.
 
-1. Collect and pre-process imbalanced historical credit datasets using SMOTE (or a schema-safe variant) to ensure fair representation.
-2. Train and benchmark an XGBoost model against an interpretable Logistic Regression baseline (and ideally Random Forest) for default classification.
-3. Implement SHAP (Shapley Additive Explanations) to extract global feature rankings and local instance contributions per applicant.
-4. Build an automated logic module that filters out unstable mid-tier features and translates only the stable top SHAP outputs into structured text.
-5. Generate a dual-audience Credit Appraisal Memo (CAM): one version for internal bank risk committees, one plain-language version for applicants.
-6. Evaluate model predictive performance (AUC/F1, ideally also PR-AUC and KS-statistic) and demonstrate end-to-end automated deployment.
+The leakage audit originally surfaced extreme behavior of the form:
 
----
+- a shallow model using suspicious bureau fields achieved near-perfect discrimination at roughly 0.9998 AUC,
+- those fields were not independent risk signals, but policy-embedded labels or proxies.
 
-## 6. Proposed Methodology
+After the audit-based exclusion of the leakage fields, the final audited model reports:
 
-```
-Applicant Data (tabular input)
-        -->
-Detect + Preprocess (balancing & scaling)
-        -->
-ML Pipeline (XGBoost vs. Logistic Regression vs. Random Forest)
-        -->
-Explainability (SHAP attributions, stability-filtered)
-        -->
-Automated Output (CAM generation)
-```
+- ROC-AUC: 0.7523 on the untouched test set,
+- 5-fold CV mean ROC-AUC: 0.7513,
+- threshold-aligned CV/test evaluation, which is now directly comparable.
 
-**Process steps:**
-1. Ingest tabular financial and demographic applicant records.
-2. Balance the historical default classes and scale/encode features.
-3. Train and benchmark models to predict a default probability score.
-4. Extract the top-driving risk features globally and locally using SHAP.
-5. Feed the stable SHAP outputs into text-generation logic to draft the Credit Appraisal Memo (internal + applicant-facing versions).
-
-**Datasets & tools:**
-- **Dataset:** Indian bank + CIBIL-style credit bureau data (tabular, applicant-level).
-- **Imbalance handling:** SMOTE / SMOTENC (imbalanced-learn).
-- **Models:** XGBoost, Logistic Regression, Random Forest (scikit-learn).
-- **Explainability:** SHAP (Shapley Additive Explanations).
-- **Environment:** Python notebook (Jupyter/Colab-compatible).
+This is a much stronger and more defensible claim than simply reporting a bug fix. It is an explicit methodological contribution to the model design pipeline.
 
 ---
 
-## 7. Core Novelty / Contribution
+## 4. Actual project design
 
-- **Artifact-driven AI:** most credit-risk XAI projects stop at "the model is explainable" via visual plots. The deliverable here is a tangible, actionable document (the CAM) a human can read and act on.
-- **Regulatory compliance:** SHAP outputs are explicitly mapped to plain-text rejection reasons, aligning with fair-lending disclosure requirements (RBI Fair Practices Code / ECOA-style "adverse action" notices).
-- **Stability filtering:** the text-generation module only cites SHAP features that are stable across repeated bootstrap re-estimation, not noisy mid-tier features.
+The final system is intentionally narrow and robust:
 
-**Novelty statement:** unlike generic scoring models that treat predictive performance, fairness, and explainability as fragmented steps, this system synthesizes them into a unified, deployable Credit Appraisal Memo satisfying both internal audit needs and consumer rights.
+- train on an 80/20 stratified split,
+- select the primary operating threshold on validation data using F2,
+- evaluate on the untouched test set at the same threshold,
+- compute SHAP values for each applicant,
+- keep only the SHAP features that are stable across bootstrap resamples,
+- translate the top stable reasons into a plain-language CAM,
+- present the final decision as APPROVE / REVIEW / REJECT for real-world bank-officer use.
 
-**Optional extensions worth considering (not core scope, but natural additions):**
-- Actionable recourse — telling a rejected applicant what would change the outcome (e.g. via counterfactual search or the `dice-ml` library).
-- Fairness/bias audit — checking approval-rate disparities across protected/proxy attributes, not just excluding those columns from training.
-- Monotonic constraints in XGBoost so features like income can't perversely increase predicted risk.
-- Calibrated probabilities (`CalibratedClassifierCV`) so the probability quoted in the CAM is trustworthy.
-
----
-
-## 8. Planned Model Comparison
-
-| Method | Explainability |
-|---|---|
-| Logistic Regression | Inherent (coefficients) |
-| Random Forest (Ensemble) | Post-hoc (SHAP) |
-| XGBoost (Standard) | Post-hoc (SHAP) |
-| **XGBoost + CAM (target system)** | **SHAP + CAM generation** |
-
-Each method should be evaluated both on the raw imbalanced data and on the balanced (SMOTE/SMOTENC) data. Metrics: **AUC**, **F1-score**, ideally also **PR-AUC** and **KS-statistic** given the low base rate. The primary success metric beyond raw scores is successfully generating an actionable, legally-defensible CAM from the XGBoost+SHAP output.
+The project therefore does not build a separate scoring pipeline for CSVs or CAM output. It reuses the same per-row applicant logic in a loop for batch scoring.
 
 ---
 
-## 9. Implementation Notes / Known Pitfalls
+## 5. Feature engineering and fairness policy
 
-- **Target definition:** if using an Indian bank + CIBIL bureau dataset with a risk-tier flag (e.g. P1–P4) as the label, verify what that field actually represents — a risk tier assigned at underwriting is not the same as a realized default outcome, and this affects how the problem should be framed.
-- **Missing-value sentinels:** bureau-style datasets sometimes encode missing values as `-99999` instead of `NaN` — check for this and impute properly before scaling.
-- **Protected attributes:** exclude `gender`, `maritalstatus` (and consider `education`) from model features — including them undermines the fair-lending compliance goal, even if unintentional. Note that removing them alone doesn't guarantee fairness (other features can proxy for them); a disparate-impact check post-training is more defensible.
-- **SMOTE ordering:** apply SMOTE (or `SMOTENC`) *before* one-hot encoding categorical features, not after. Plain `SMOTE` on already one-hot-encoded columns generates invalid fractional category values (e.g. 0.6 of a category).
-- **Calibration:** probabilities from a model trained on SMOTE-balanced data are not well-calibrated to the natural imbalanced population. Calibrate on a held-out, non-resampled split before quoting probabilities in the CAM.
-- **Evaluation robustness:** prefer stratified k-fold cross-validation over a single train/test split, and apply any resampling *inside* each fold to avoid leakage.
-- **Current build status:** a basic version already exists — a model that takes structured input and returns a text output, plus a front-end for entering inputs (has some known bugs to fix).
+The feature set is built from merged bureau and internal bank data with the following policy:
 
-### Current leakage audit
+- remove protected or sensitive attributes such as `GENDER` and `MARITALSTATUS`,
+- remove identifiers such as `PROSPECTID`,
+- remove the target label itself (`Approved_Flag`),
+- remove known label-proxy and underwriting-equivalent fields via `AUDITED_LABEL_PROXY_COLUMNS`,
+- apply missing-value normalization for sentinels such as `-99999`, blank strings, and `NA`.
 
-`Approved_Flag` is an underwriting risk tier rather than an independent realized-default outcome. The audit supports that interpretation: a shallow depth-3 decision tree using a small set of suspicious bureau fields achieved held-out AUC `0.99989` and accuracy `0.999805`, with `Credit_Score` receiving all tree importance. After removing `Credit_Score`, `enq_L3m` dominated the next tree (`AUC 0.924`); after removing it, `enq_L6m` dominated (`AUC 0.900`). These are label proxies, not safe predictors for an independent approval model.
+This is a governance-first feature policy, not merely a statistical cleanup. It reflects the fact that fairness and explainability are not optional add-ons in underwriting.
 
-The production feature set therefore uses the explicit `AUDITED_LABEL_PROXY_COLUMNS` exclusion list in `app/preprocessing.py`, based on the tree audit and related bureau aggregates rather than name-pattern matching. A model trained after this exclusion reports ROC-AUC `0.7523` on the current holdout. The categorical single-feature screen found no non-target categorical field above AUC `0.85`; `last_prod_enq2` was highest at `0.6613`. These results should be reported as prediction of the existing underwriting tier, not validated future default risk.
+---
+
+## 6. Model and threshold logic
+
+The core model is an XGBoost classifier trained with class weighting to reflect the original positive rate.
+
+The project uses a two-step threshold policy:
+
+1. primary operating threshold at 0.40 for the standard reject vs approve decision,
+2. upper review threshold at approximately 0.6569, derived from validation behavior,
+
+with the review band defined as:
+
+- below 0.40: APPROVE
+- 0.40 to 0.6569: REVIEW
+- above 0.6569: REJECT
+
+This design is more realistic for a human workflow than a binary cutoff alone.
+
+The threshold search uses validation data, not the test set, and the final CV summary uses the same operating threshold so metric comparisons are methodologically honest.
+
+---
+
+## 7. Stability-filtered SHAP explanations
+
+The model does not dump all top SHAP impacts into a final memo. Instead, it filters the explanations by stability.
+
+The current logic uses:
+
+- 5 bootstrap resamples,
+- top-K rank of 5,
+- support threshold of 0.60,
+
+which creates a stable feature set that is more defensible for applicant-facing explanations than a one-off SHAP ranking.
+
+This matters because mid-tier features can appear highly ranked in a single run yet be unstable under resampling. For bank communication, unstable reasons are worse than no reason at all.
+
+---
+
+## 8. CAM design: dual audience output
+
+The final output is a dual-audience credit appraisal memo.
+
+### 8.1 Internal technical summary
+
+The internal version keeps the original SHAP features, contributions, and decision metadata so the underwriting team can audit the local explanation and verify the risk logic.
+
+### 8.2 Applicant-facing plain-language summary
+
+The applicant-facing version converts encoded or technical feature names into human-readable descriptions such as:
+
+- age of your oldest credit account,
+- monthly income,
+- percentage of your total balances currently in use,
+- share of your exposure that is unsecured.
+
+The applicant summary avoids raw encoded names such as `numeric__Age_Newest_TL` and instead emits natural-language reasons such as:
+
+- “Your age of your newest credit account increases your risk of rejection.”
+
+This is important for operational clarity and for any explanation process that needs to be readable by a non-technical stakeholder.
+
+---
+
+## 9. Batch scoring and operational support
+
+The system supports batch CSV scoring by reusing the single-applicant path in a loop rather than inventing a second downstream model.
+
+The batch routine:
+
+- loads the CSV,
+- validates that all required columns are present,
+- normalizes common CSV noise such as thousands separators, blank strings, `NA`, and `-99999`,
+- reuses `handle_missing_sentinels` and `predict_applicant` for each row,
+- returns a list of per-row decisions.
+
+This means all scoring logic remains centralized and consistent with the audited single-row path.
+
+---
+
+## 10. Final measured outcomes
+
+The current audited model reports the following on the untouched test set:
+
+- ROC-AUC: 0.7523
+- PR-AUC: 0.3034
+- KS: 0.3675
+- recall: 0.7815
+- precision: 0.1953
+- F1: 0.3125
+- F2: 0.4884
+- threshold: 0.40
+
+The same threshold is used in the 5-fold CV summary, which preserves comparability.
+
+The three-tier decision distribution on the held-out set is:
+
+- APPROVE: 54.18%
+- REVIEW: 34.14%
+- REJECT: 11.69%
+
+This is much closer to an actual officer-facing workflow than a raw binary reject rate.
+
+---
+
+## 11. What this project is and is not
+
+This project is:
+
+- a transparent underwriting-tier classifier,
+- a leakage-aware modeling workflow,
+- an explainable decision support system with SHAP + CAM,
+- a bank-officer triage aid with review bandwidth.
+
+This project is not:
+
+- a validated real-world default-risk model,
+- a claim that the current underwriting label is a future default outcome,
+- a production-ready lending engine without human governance.
+
+The strongest defensible story is therefore: the project demonstrates a leakage-aware, explainable, operationally useful underwriting decision support tool that is honest about its target definition and the limits of predictive validity.
