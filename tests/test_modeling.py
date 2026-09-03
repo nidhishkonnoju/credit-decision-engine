@@ -1,9 +1,10 @@
+import re
 import unittest
 
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from app.cam import generate_credit_appraisal_memo
+from app.cam import FEATURE_LABEL_MAP, generate_credit_appraisal_memo
 from app.inference import batch_score_csv, predict_applicant
 from app.modeling import (
     evaluate_model,
@@ -91,6 +92,30 @@ class ModelingSmokeTest(unittest.TestCase):
         self.assertNotIn("__", applicant_text)
         self.assertNotIn("numeric__", applicant_text)
         self.assertNotIn("Age_Oldest_TL", applicant_text)
+        self.assertTrue(
+            all(
+                re.search(r"\b(\w+)\s+\1\b", sentence, re.IGNORECASE) is None
+                for sentence in appraisal["applicant_facing"]["reasons"]
+            ),
+            msg=f"Repeated consecutive word in CAM reasons: {appraisal['applicant_facing']['reasons']}",
+        )
+
+        mapped_reasons = generate_credit_appraisal_memo(
+            {
+                "decision": "REVIEW",
+                "probability": 0.5,
+                "threshold": 0.4,
+                "review_threshold": 0.65,
+                "top_reasons": [
+                    {"feature": feature_name, "direction": "increases rejection risk"}
+                    for feature_name in FEATURE_LABEL_MAP
+                ],
+            }
+        )["applicant_facing"]["reasons"]
+        self.assertTrue(
+            all(re.search(r"\b(\w+)\s+\1\b", sentence, re.IGNORECASE) is None for sentence in mapped_reasons),
+            msg=f"Repeated consecutive word in mapped CAM reasons: {mapped_reasons}",
+        )
         self.assertTrue(appraisal["applicant_facing"]["summary"])
 
     def test_top_reasons_only_draw_from_stable_features(self):

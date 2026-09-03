@@ -3,15 +3,15 @@ from __future__ import annotations
 from typing import Any
 
 FEATURE_LABEL_MAP: dict[str, str] = {
-    "Age_Oldest_TL": "age of your oldest credit account",
-    "Age_Newest_TL": "age of your newest credit account",
+    "Age_Oldest_TL": "age of the oldest credit account",
+    "Age_Newest_TL": "age of the newest credit account",
     "Total_TL": "total credit limit across your accounts",
-    "Consumer_TL": "your consumer credit limit",
-    "CC_TL": "your credit card credit limit",
-    "PL_TL": "your personal loan balance",
-    "Secured_TL": "your secured credit limit",
-    "Unsecured_TL": "your unsecured credit limit",
-    "Other_TL": "your other credit limit",
+    "Consumer_TL": "consumer credit limit",
+    "CC_TL": "credit card credit limit",
+    "PL_TL": "personal loan balance",
+    "Secured_TL": "secured credit limit",
+    "Unsecured_TL": "unsecured credit limit",
+    "Other_TL": "other credit limit",
     "pct_currentBal_all_TL": "percentage of your total balances currently in use",
     "max_delinquency_level": "maximum delinquency level on your accounts",
     "time_since_recent_payment": "time since your most recent payment",
