@@ -14,7 +14,7 @@ def _normalize_csv_values(df: pd.DataFrame) -> pd.DataFrame:
     """Normalize common CSV messiness to the same null semantics used during training."""
     normalized = df.copy()
     for column in normalized.columns:
-        if normalized[column].dtype == "object":
+        if pd.api.types.is_string_dtype(normalized[column]):
             normalized[column] = normalized[column].astype(str)
             normalized[column] = normalized[column].replace({"nan": pd.NA, "NaN": pd.NA, "NA": pd.NA, "N/A": pd.NA, "": pd.NA})
             normalized[column] = normalized[column].str.replace(r"[,$\s]", "", regex=True)

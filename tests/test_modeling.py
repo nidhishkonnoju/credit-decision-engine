@@ -1,18 +1,31 @@
 import re
+import tempfile
 import unittest
+from pathlib import Path
 
+import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 
-from app.cam import FEATURE_LABEL_MAP, generate_credit_appraisal_memo
-from app.inference import batch_score_csv, predict_applicant
+from app.cam import (
+    FEATURE_LABEL_MAP,
+    FEATURE_TO_5C,
+    FIVE_CATEGORIES,
+    generate_cam,
+    generate_credit_appraisal_memo,
+    validate_feature_mapping,
+)
+from app.inference import _normalize_csv_values, batch_score_csv, predict_applicant
 from app.modeling import (
+    compute_seed_stability,
     evaluate_model,
     find_best_threshold,
     find_review_threshold,
     fit_credit_model,
+    kendalls_w,
     summarize_decision,
 )
+from app.persistence import load_model_artifact, save_model_artifact
 from app.preprocessing import build_preprocessed_data
 
 
@@ -33,6 +46,7 @@ class ModelingSmokeTest(unittest.TestCase):
         self.assertIn("decision", summary)
         self.assertIn("probability", summary)
         self.assertIn("top_reasons", summary)
+        self.assertFalse(summary["stability_filtered"])
 
     def test_decision_uses_supplied_threshold(self):
         sample_row = self.data["X_test"].iloc[[0]].copy()
@@ -67,6 +81,29 @@ class ModelingSmokeTest(unittest.TestCase):
         encoded_names = self.model_result["preprocessor"].get_feature_names_out().tolist()
         self.assertTrue(all(name in encoded_names for name in feature_names))
         self.assertTrue(all(not name.startswith("feature_") for name in feature_names))
+
+        self.assertTrue(
+            set(self.model_result["stable_feature_names"]) <= set(encoded_names)
+        )
+
+    def test_empty_stability_filter_does_not_fallback_to_raw_reasons(self):
+        sample_row = self.data["X_test"].iloc[[0]].copy()
+        summary = summarize_decision(
+            self.model_result["model"],
+            self.model_result["preprocessor"],
+            sample_row,
+            stable_feature_names=[],
+        )
+
+        self.assertTrue(summary["stability_filtered"])
+        self.assertEqual(summary["top_reasons"], [])
+
+        appraisal = generate_credit_appraisal_memo(summary)
+        self.assertEqual(appraisal["applicant_facing"]["reasons"], [])
+        self.assertEqual(
+            appraisal["applicant_facing"]["no_high_confidence_factors"],
+            "No high-confidence factors identified from the stability-filtered explanation.",
+        )
 
     def test_inference_handles_training_sentinels_and_missing_fields(self):
         applicant = self.data["X_test"].iloc[[0]].copy()
@@ -128,6 +165,24 @@ class ModelingSmokeTest(unittest.TestCase):
             stable_feature_names=self.model_result["stable_feature_names"],
         )
         self.assertTrue(all(reason["feature"] in self.model_result["stable_feature_names"] for reason in summary["top_reasons"]))
+
+    def test_structured_cam_contains_all_5c_sections_and_only_stable_reasons(self):
+        sample_row = self.data["X_test"].iloc[[0]].copy()
+        cam = generate_cam(sample_row, self.model_result)
+
+        self.assertEqual(set(cam["sections"]), FIVE_CATEGORIES)
+        self.assertTrue(cam["stability_filtered"])
+        section_features = {
+            reason["feature"]
+            for section in cam["sections"].values()
+            for reason in section["reasons"]
+        }
+        self.assertTrue(section_features <= set(self.model_result["stable_feature_names"]))
+        self.assertEqual(
+            section_features,
+            set(cam["stable_reason_features"]),
+        )
+        self.assertTrue(all(section["reasons"] or section["empty_message"] for section in cam["sections"].values()))
 
     def test_evaluation_and_thresholding_outputs_are_valid(self):
         metrics = evaluate_model(
@@ -213,6 +268,37 @@ class ModelingSmokeTest(unittest.TestCase):
             if os.path.exists(csv_path):
                 os.remove(csv_path)
 
+    def test_batch_csv_normalizes_comma_formatted_numeric_values(self):
+        applicant = self.data["X_test"].iloc[[0]].copy()
+        numeric_income = float(applicant.iloc[0]["NETMONTHLYINCOME"])
+        applicant["NETMONTHLYINCOME"] = applicant["NETMONTHLYINCOME"].astype("object")
+        applicant.loc[applicant.index[0], "NETMONTHLYINCOME"] = f"{numeric_income:,.0f}"
+        csv_path = Path("comma_income_batch.csv")
+        applicant.to_csv(csv_path, index=False)
+
+        try:
+            results = batch_score_csv(csv_path, self.model_result)
+            expected = predict_applicant(
+                self.model_result,
+                _normalize_csv_values(applicant.assign(NETMONTHLYINCOME=numeric_income)),
+            )
+            self.assertEqual(len(results), 1)
+            self.assertEqual(results[0]["decision"], expected["decision"])
+            self.assertEqual(results[0]["probability"], expected["probability"])
+        finally:
+            if csv_path.exists():
+                csv_path.unlink()
+
+    def test_model_artifact_round_trip_preserves_scoring_contract(self):
+        with tempfile.TemporaryDirectory() as directory:
+            artifact_path = Path(directory) / "credit_model_v1.joblib"
+            save_model_artifact(self.model_result, artifact_path)
+            loaded = load_model_artifact(artifact_path)
+
+            self.assertEqual(loaded["raw_feature_columns"], self.model_result["raw_feature_columns"])
+            self.assertEqual(loaded["threshold"], self.model_result["threshold"])
+            self.assertEqual(loaded["review_threshold"], self.model_result["review_threshold"])
+
 
 class PreprocessingFairnessTest(unittest.TestCase):
     def test_protected_fields_do_not_appear_in_final_feature_set(self):
@@ -224,6 +310,50 @@ class PreprocessingFairnessTest(unittest.TestCase):
             all(not any(token.lower() in name.lower() for token in forbidden) for name in feature_names),
             msg=f"Protected fields leaked into feature set: {feature_names[:10]}",
         )
+
+    def test_every_raw_model_feature_has_exactly_one_5c_category(self):
+        data = build_preprocessed_data()
+        validate_feature_mapping(data["feature_columns"])
+        self.assertEqual(set(data["feature_columns"]), set(FEATURE_TO_5C))
+        self.assertTrue(all(category in FIVE_CATEGORIES for category in FEATURE_TO_5C.values()))
+
+
+class SeedStabilityTest(unittest.TestCase):
+    def test_kendalls_w_is_one_for_identical_rank_lists(self):
+        rank_matrix = pd.DataFrame(
+            [[1, 2, 3], [1, 2, 3], [1, 2, 3]]
+        ).to_numpy()
+        self.assertEqual(kendalls_w(rank_matrix), 1.0)
+
+    def test_seed_stability_keeps_dominant_feature_highly_ranked(self):
+        from xgboost import XGBClassifier
+
+        rng = np.random.default_rng(42)
+        features = pd.DataFrame(
+            rng.normal(size=(120, 4)),
+            columns=["dominant", "noise_a", "noise_b", "noise_c"],
+        )
+        labels = (features["dominant"] > 0).astype(int)
+        result = compute_seed_stability(
+            features,
+            labels,
+            features.iloc[:40],
+            XGBClassifier(
+                n_estimators=10,
+                max_depth=2,
+                eval_metric="logloss",
+                n_jobs=1,
+            ).get_params(),
+            n_seeds=5,
+            evaluation_sample_size=40,
+        )
+
+        self.assertEqual(result["rank_matrix"].shape, (5, 4))
+        self.assertEqual(result["feature_names"], features.columns.tolist())
+        self.assertEqual(result["rank_statistics"]["dominant"]["mean_rank"], 1.0)
+        self.assertEqual(result["rank_statistics"]["dominant"]["rank_range"], 0)
+        self.assertGreaterEqual(result["overall_w"], 0.0)
+        self.assertLessEqual(result["overall_w"], 1.0)
 
 
 if __name__ == "__main__":

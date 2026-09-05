@@ -69,13 +69,51 @@ The final operating model now uses a second, higher review threshold above the p
 
 No bucket is empty.
 
+### SHAP stability analysis
+
+The stability analysis trains 100 XGBoost models on the identical training data,
+varying only `random_state`. Each model is evaluated on the same fixed 512-row prefix
+of the untouched test matrix. Features are ranked by mean absolute SHAP value, and
+Kendall's W is calculated from the resulting rank matrix.
+
+- Overall W: 0.9891
+- Top-five mean-ranked feature W: 1.0000
+- Six highest-rank-variance feature W: 0.4258
+
+A feature is eligible for a customer-facing explanation only when it is among the top
+10 features by mean rank and its rank range across the 100 seeds is at most 3. The
+stored feature names use the exact encoded names emitted by the fitted preprocessor.
+
+### Stability-filter ablation and 5C coverage
+
+The Phase 4 evaluator uses a fixed 50-applicant sample from the untouched test split.
+The sample is saved with both dataframe row indices and `PROSPECTID` values, and is
+reused on subsequent runs.
+
+| Measure | Result |
+|---|---:|
+| Memos with an unstable raw top-five reason | 17 / 50 (34.00%) |
+| Raw reasons across the sample | 250 |
+| Stability-filtered reasons across the sample | 226 |
+| Reasons removed by the stability filter | 24 |
+| APPROVE / REVIEW / REJECT | 30 / 16 / 4 |
+| Empty Character sections | 4 / 50 (8.00%) |
+| Empty Capacity sections | 15 / 50 (30.00%) |
+| Empty Capital sections | 28 / 50 (56.00%) |
+| Empty Collateral sections | 5 / 50 (10.00%) |
+| Empty Conditions sections | 30 / 50 (60.00%) |
+
+The evaluator produced identical output on two consecutive runs. These results show
+that the stability filter changes the generated explanations materially while also
+revealing that Conditions and Capital are frequently empty in this sample.
+
 ## Interpretation
 
 Accuracy is not the key objective because the positive class rate is roughly 11.5%. Recall, precision, F1, PR-AUC, and KS provide more informative evidence on this imbalanced underwriting-task setup.
 
 The important fix in this round of work was methodological consistency: the 5-fold cross-validation metrics are now evaluated at the same primary threshold as the untouched test set. This prevents a false comparison between a thresholded holdout and an unthresholded or mismatched CV summary. The final model is therefore reported with internal consistency across train/validation/test evaluation.
 
-The leakage audit remains the strongest methodological contribution. It gave the project a defensible feature policy and changed the raw AUC story from a near-perfect but invalid signal to a reasonable, audit-safe score that reflects the current underwriting tier rather than future default risk.
+The leakage audit defines the feature policy and changes the raw AUC story from a near-perfect but invalid signal to a reasonable, audit-safe score that reflects the current underwriting tier rather than future default risk. The stability analysis follows Lin and Wang (2025), "SHAP Stability in Credit Risk Management," *Risks*, 13(238): 100 seed-only XGBoost fits, fixed evaluation rows, SHAP rank lists, and Kendall's W.
 
 ## Current output and workflow
 
@@ -86,7 +124,7 @@ The terminal workflow supports:
 - dual-audience CAM generation:
   - internal technical SHAP summary
   - applicant-facing plain-language explanation
-- stability-filtered feature reasons using bootstrap agreement over repeated resamples
+- stability-filtered feature reasons using the documented 100-seed SHAP rank rule
 - three-tier decisions: APPROVE / REVIEW / REJECT
 
 The CLI prints the selected threshold, the review threshold, the probability, and the human-readable credit appraisal rationale.

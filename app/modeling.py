@@ -18,9 +18,11 @@ from sklearn.metrics import (
 from sklearn.model_selection import StratifiedKFold, train_test_split
 from xgboost import XGBClassifier
 
-BOOTSTRAP_STABILITY_RUNS = 5  # majority agreement across independent resamples is a reasonable stability bar.
-STABILITY_TOP_K = 5  # keep only the strongest recurring drivers from each resample.
-STABILITY_SUPPORT_THRESHOLD = 0.6  # a feature must appear in a majority of runs to be considered stable.
+SEED_STABILITY_RUNS = 100
+STABILITY_TOP_K = 10
+STABILITY_RANK_RANGE_MAX = 3
+STABILITY_DIVERSITY_BAND_SIZE = 6
+STABILITY_EVALUATION_SAMPLE_SIZE = 512
 
 
 def build_xgboost_model(scale_pos_weight: float) -> XGBClassifier:
@@ -40,6 +42,9 @@ def build_xgboost_model(scale_pos_weight: float) -> XGBClassifier:
 
 def fit_credit_model(data: dict[str, Any]) -> dict[str, Any]:
     """Train a compact XGBoost model and select threshold on a validation split carved from training data."""
+    from app.cam import validate_feature_mapping
+
+    validate_feature_mapping(data["feature_columns"])
     X_train = data["X_train_processed"]
     X_test = data["X_test_processed"]
     y_train = data["y_train"]
@@ -81,10 +86,14 @@ def fit_credit_model(data: dict[str, Any]) -> dict[str, Any]:
         key=lambda item: item[1],
         reverse=True,
     )[:10]
-    stability_result = compute_bootstrap_stability(
+    stability_result = compute_seed_stability(
         X_train_model,
         y_train_model,
-        data["preprocessor"],
+        X_test,
+        {
+            **build_xgboost_model(scale).get_params(),
+            "feature_names": feature_names,
+        },
     )
 
     return {
@@ -100,6 +109,7 @@ def fit_credit_model(data: dict[str, Any]) -> dict[str, Any]:
         "stable_feature_names": stability_result["stable_features"],
         "stability_scores": stability_result["stability_scores"],
         "filtered_stability_features": stability_result["filtered_out"],
+        "stability_result": stability_result,
         "top_features": [
             {"feature": name, "importance": round(float(value), 4)}
             for name, value in ranked
@@ -202,52 +212,109 @@ def _ks_statistic(y_true: pd.Series, probabilities: np.ndarray) -> float:
     return float(np.max(true_positive_rate - false_positive_rate))
 
 
-def compute_bootstrap_stability(
+def kendalls_w(rank_matrix: np.ndarray) -> float:
+    """Calculate Kendall's coefficient of concordance for rank lists."""
+    ranks = np.asarray(rank_matrix, dtype=float)
+    if ranks.ndim != 2:
+        raise ValueError("rank_matrix must be a two-dimensional array.")
+    n_models, n_features = ranks.shape
+    if n_models < 2 or n_features < 2:
+        return 1.0
+
+    rank_sums = ranks.sum(axis=0)
+    expected_sum = n_models * (n_features + 1) / 2
+    disagreement = float(np.sum((rank_sums - expected_sum) ** 2))
+    denominator = n_models**2 * (n_features**3 - n_features)
+    return float(np.clip(12 * disagreement / denominator, 0.0, 1.0))
+
+
+def _rerank_columns(rank_matrix: np.ndarray, column_indices: np.ndarray) -> np.ndarray:
+    """Rerank a selected feature subset within each model's rank list."""
+    selected = rank_matrix[:, column_indices]
+    return np.argsort(np.argsort(selected, axis=1), axis=1) + 1
+
+
+def compute_seed_stability(
     X_train: np.ndarray,
     y_train: pd.Series,
-    preprocessor: Any,
-    n_runs: int = BOOTSTRAP_STABILITY_RUNS,
-    top_k: int = STABILITY_TOP_K,
-    support_threshold: float = STABILITY_SUPPORT_THRESHOLD,
+    X_test: np.ndarray,
+    base_params: dict[str, Any],
+    n_seeds: int = SEED_STABILITY_RUNS,
+    evaluation_sample_size: int = STABILITY_EVALUATION_SAMPLE_SIZE,
 ) -> dict[str, Any]:
-    """Rank features by bootstrap stability and keep only those supported by a majority of runs."""
-    feature_names = preprocessor.get_feature_names_out().tolist()
-    support = {name: 0 for name in feature_names}
+    """Replicate Lin & Wang (2025)'s seed-only SHAP stability procedure.
 
-    for seed in range(n_runs):
-        rng = np.random.default_rng(seed)
-        sample_indices = rng.choice(len(X_train), size=len(X_train), replace=True)
-        sample_X = X_train[sample_indices]
-        sample_y = y_train.iloc[sample_indices]
+    Every model receives the same X_train/y_train values and the same fixed prefix
+    of X_test for SHAP evaluation. Only random_state changes between models.
+    A feature is memo-eligible when it is among the top 10 mean-ranked features
+    and its rank range across seeds is at most 3.
+    """
+    if n_seeds < 2:
+        raise ValueError("n_seeds must be at least 2 to calculate rank concordance.")
 
-        positive_count = float(sample_y.value_counts().get(1, 0))
-        negative_count = float(sample_y.value_counts().get(0, 0))
-        boot_model = build_xgboost_model(negative_count / positive_count if positive_count else 1.0)
-        boot_model.fit(sample_X, sample_y)
+    params = dict(base_params)
+    configured_feature_names = params.pop("feature_names", None)
+    params.pop("random_state", None)
+    params["n_jobs"] = params.get("n_jobs", 1)
+    feature_names = configured_feature_names or [f"feature_{index}" for index in range(X_train.shape[1])]
+    if configured_feature_names is None and hasattr(X_train, "columns"):
+        feature_names = list(X_train.columns)
 
-        ranked = sorted(
-            zip(feature_names, boot_model.feature_importances_),
-            key=lambda item: item[1],
-            reverse=True,
-        )[:top_k]
-        for name, _ in ranked:
-            support[name] += 1
+    evaluation_sample = X_test[:evaluation_sample_size]
+    rank_lists: list[np.ndarray] = []
+    for seed in range(n_seeds):
+        model = XGBClassifier(**params, random_state=seed)
+        model.fit(X_train, y_train)
+        shap_values = shap.TreeExplainer(model).shap_values(evaluation_sample)
+        if isinstance(shap_values, list):
+            values = np.asarray(shap_values[1])
+        else:
+            values = np.asarray(shap_values)
+        if values.ndim == 3:
+            values = values[:, :, 1]
+        mean_absolute_shap = np.mean(np.abs(values), axis=0)
+        rank_lists.append(np.argsort(np.argsort(-mean_absolute_shap)) + 1)
 
-    stability_scores = {
-        name: round(float(count / n_runs), 4)
-        for name, count in support.items()
-    }
-    stable_features = [
-        name
-        for name, score in stability_scores.items()
-        if score >= support_threshold
-    ]
+    rank_matrix = np.vstack(rank_lists)
+    mean_ranks = rank_matrix.mean(axis=0)
+    rank_variances = rank_matrix.var(axis=0)
+    rank_ranges = rank_matrix.max(axis=0) - rank_matrix.min(axis=0)
+
+    top_5_indices = np.argsort(mean_ranks)[:5]
+    diversity_indices = np.argsort(rank_variances)[::-1][:STABILITY_DIVERSITY_BAND_SIZE]
+    stable_indices = np.where(
+        (np.argsort(np.argsort(mean_ranks)) < STABILITY_TOP_K)
+        & (rank_ranges <= STABILITY_RANK_RANGE_MAX)
+    )[0]
+    stable_features = [feature_names[index] for index in stable_indices]
     filtered_out = [name for name in feature_names if name not in stable_features]
+    rank_statistics = {
+        name: {
+            "mean_rank": round(float(mean_ranks[index]), 4),
+            "rank_variance": round(float(rank_variances[index]), 4),
+            "rank_range": int(rank_ranges[index]),
+        }
+        for index, name in enumerate(feature_names)
+    }
 
     return {
         "stable_features": stable_features,
         "filtered_out": filtered_out,
-        "stability_scores": stability_scores,
+        "stability_scores": {
+            name: round(float(1 / (1 + rank_variances[index])), 4)
+            for index, name in enumerate(feature_names)
+        },
+        "rank_matrix": rank_matrix,
+        "feature_names": feature_names,
+        "rank_statistics": rank_statistics,
+        "overall_w": kendalls_w(rank_matrix),
+        "top_5_features": [feature_names[index] for index in top_5_indices],
+        "top_5_w": kendalls_w(_rerank_columns(rank_matrix, top_5_indices)),
+        "diversity_band_features": [feature_names[index] for index in diversity_indices],
+        "diversity_band_w": kendalls_w(_rerank_columns(rank_matrix, diversity_indices)),
+        "n_seeds": n_seeds,
+        "evaluation_sample_size": min(evaluation_sample_size, len(X_test)),
+        "stability_rule": "top 10 mean-ranked features with rank range <= 3 across seeds",
     }
 
 
@@ -334,12 +401,19 @@ def summarize_decision(
             f"SHAP feature mismatch: {len(feature_names)} names vs {len(values)} SHAP values"
         )
 
-    top_indices = np.argsort(np.abs(values))[::-1][:5]
-    if stable_feature_names:
+    stability_filtered = stable_feature_names is not None
+    if stability_filtered:
         stable_set = set(stable_feature_names)
+        unknown_stable_features = stable_set.difference(feature_names)
+        if unknown_stable_features:
+            raise ValueError(
+                "Stable feature names must match encoded preprocessor names: "
+                f"{sorted(unknown_stable_features)}"
+            )
+        top_indices = np.argsort(np.abs(values))[::-1][:5]
         top_indices = [idx for idx in top_indices if feature_names[idx] in stable_set]
-        if not top_indices:
-            top_indices = np.argsort(np.abs(values))[::-1][:5]
+    else:
+        top_indices = np.argsort(np.abs(values))[::-1][:5]
 
     top_reasons = [
         {
@@ -356,5 +430,6 @@ def summarize_decision(
         "probability": round(probability, 4),
         "threshold": threshold,
         "review_threshold": review_threshold,
+        "stability_filtered": stability_filtered,
         "top_reasons": top_reasons,
     }

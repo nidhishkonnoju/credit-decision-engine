@@ -3,5 +3,6 @@
 __pycache__/
 .pytest_cache/
 *.pyc
+artifacts/*.joblib
 Credit Appraisal Memos for reference/
 Research Papers/

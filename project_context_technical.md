@@ -1,4 +1,4 @@
-# AI-Driven Credit Risk Assessment with Explainability and Operational Triage
+# Credit Risk Assessment with Stability-Validated Explainability
 
 ## 1. Overview
 
@@ -24,13 +24,13 @@ The implications are severe:
 - the model learns proxy patterns instead of independent risk drivers,
 - the resulting output looks “accurate” but is not defensible as a true credit-risk model.
 
-This is why the first major contribution of the project is a structured leakage audit rather than just a model score.
+The project therefore treats leakage auditing as a required modeling step rather than as a post-hoc explanation for a model score.
 
 ---
 
-## 3. Methodological contribution: the leakage audit as a product feature
+## 3. Leakage audit and target limitation
 
-The project’s strongest claim is not merely that it fixed a bug. It is that it explicitly identified and removed underwriting leakage before model training.
+The project explicitly identifies and removes underwriting leakage before model training.
 
 The audited methodology is straightforward:
 
@@ -39,7 +39,7 @@ The audited methodology is straightforward:
 - remove those fields as part of the feature policy,
 - retrain and re-evaluate the final model on a defensible feature set.
 
-This is the central contribution because it turns an otherwise fragile score into a credible underwriting classifier built on a cleaned feature policy.
+This produces a more defensible underwriting-tier classifier, while not changing the limitation that the target is not a realized default event.
 
 The leakage audit originally surfaced extreme behavior of the form:
 
@@ -52,7 +52,7 @@ After the audit-based exclusion of the leakage fields, the final audited model r
 - 5-fold CV mean ROC-AUC: 0.7513,
 - threshold-aligned CV/test evaluation, which is now directly comparable.
 
-This is a much stronger and more defensible claim than simply reporting a bug fix. It is an explicit methodological contribution to the model design pipeline.
+These results support reporting the model as an underwriting-tier classifier rather than as a future-default model.
 
 ---
 
@@ -64,7 +64,7 @@ The final system is intentionally narrow and robust:
 - select the primary operating threshold on validation data using F2,
 - evaluate on the untouched test set at the same threshold,
 - compute SHAP values for each applicant,
-- keep only the SHAP features that are stable across bootstrap resamples,
+- keep only features that pass the 100-seed SHAP rank stability rule,
 - translate the top stable reasons into a plain-language CAM,
 - present the final decision as APPROVE / REVIEW / REJECT for real-world bank-officer use.
 
@@ -111,13 +111,12 @@ The threshold search uses validation data, not the test set, and the final CV su
 
 The model does not dump all top SHAP impacts into a final memo. Instead, it filters the explanations by stability.
 
-The current logic uses:
+The current logic follows Lin and Wang (2025), "SHAP Stability in Credit Risk Management," *Risks*, 13(238):
 
-- 5 bootstrap resamples,
-- top-K rank of 5,
-- support threshold of 0.60,
-
-which creates a stable feature set that is more defensible for applicant-facing explanations than a one-off SHAP ranking.
+- train 100 models on identical training data while varying only `random_state`,
+- rank features by mean absolute SHAP value on a fixed 512-row test sample,
+- calculate Kendall's W overall, for the top five mean-ranked features, and for the six highest-rank-variance features,
+- allow a feature into the memo only when it is in the top 10 by mean rank and its rank range is at most 3.
 
 This matters because mid-tier features can appear highly ranked in a single run yet be unstable under resampling. For bank communication, unstable reasons are worse than no reason at all.
 
@@ -135,14 +134,14 @@ The internal version keeps the original SHAP features, contributions, and decisi
 
 The applicant-facing version converts encoded or technical feature names into human-readable descriptions such as:
 
-- age of your oldest credit account,
+- age of the oldest credit account,
 - monthly income,
 - percentage of your total balances currently in use,
 - share of your exposure that is unsecured.
 
 The applicant summary avoids raw encoded names such as `numeric__Age_Newest_TL` and instead emits natural-language reasons such as:
 
-- “Your age of your newest credit account increases your risk of rejection.”
+- “Your age of the newest credit account increases your risk of rejection.”
 
 This is important for operational clarity and for any explanation process that needs to be readable by a non-technical stakeholder.
 
@@ -204,4 +203,4 @@ This project is not:
 - a claim that the current underwriting label is a future default outcome,
 - a production-ready lending engine without human governance.
 
-The strongest defensible story is therefore: the project demonstrates a leakage-aware, explainable, operationally useful underwriting decision support tool that is honest about its target definition and the limits of predictive validity.
+The defensible description is therefore: the project implements a leakage-aware, explainable underwriting decision-support workflow and reports its target definition and predictive limitations explicitly.
