@@ -6,7 +6,7 @@ from app.cam import generate_cam, generate_credit_appraisal_memo
 from app.inference import load_applicant_json, predict_applicant
 from app.modeling import fit_credit_model, summarize_decision
 from app.persistence import DEFAULT_ARTIFACT_PATH, load_model_artifact, save_model_artifact
-from app.preprocessing import DATASET_DIR, build_preprocessed_data, print_preprocessing_summary
+from app.preprocessing import DATASET_DIR, build_preprocessed_data, handle_missing_sentinels, print_preprocessing_summary
 
 
 def parse_args() -> argparse.Namespace:
@@ -15,6 +15,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--batch", type=str, help="Path to a CSV file of applicants with the same model columns.")
     parser.add_argument("--retrain", action="store_true", help="Retrain and replace the persisted model artifact.")
     parser.add_argument("--cam", action="store_true", help="Print the structured 5C credit appraisal memo.")
+    parser.add_argument("--pdf", nargs="?", const="auto", default=None, help="Generate a downloadable PDF CAM report. Optionally specify output path.")
     return parser.parse_args()
 
 
@@ -31,8 +32,14 @@ if __name__ == "__main__":
         artifact_path = save_model_artifact(model_result, DEFAULT_ARTIFACT_PATH)
         print(f"Saved model artifact: {artifact_path}")
 
+    # --pdf implies --cam
+    if args.pdf is not None:
+        args.cam = True
+
     print("Model metrics:", model_result["metrics"])
-    print("Cross-validation metrics:", model_result["cross_validation_metrics"])
+    cross_val = model_result.get("cross_validation_metrics")
+    if cross_val is not None:
+        print("Cross-validation metrics:", cross_val)
     stability = model_result.get("stability_result")
     if stability:
         print(
@@ -61,6 +68,7 @@ if __name__ == "__main__":
     elif args.input:
         applicant = load_applicant_json(args.input, model_result["raw_feature_columns"])
         if args.cam:
+            applicant = handle_missing_sentinels(applicant)
             cam = generate_cam(applicant, model_result)
             print("Structured 5C Credit Appraisal Memo")
             print(cam["summary"])
@@ -76,6 +84,11 @@ if __name__ == "__main__":
             print("Decision threshold:", cam["threshold"])
             if cam["review_threshold"] is not None:
                 print("Review threshold:", cam["review_threshold"])
+            if args.pdf is not None:
+                from app.pdf_report import generate_cam_pdf
+
+                pdf_path = generate_cam_pdf(cam, model_result, output_path=args.pdf)
+                print(f"PDF report saved to: {pdf_path}")
             print("Training and decision pipeline complete.")
             raise SystemExit(0)
         decision = predict_applicant(model_result, applicant)

@@ -5,24 +5,24 @@
     "REVIEW": 16
   },
   "empty_section_counts": {
-    "Capacity": 15,
-    "Capital": 28,
-    "Character": 4,
+    "Capacity": 16,
+    "Capital": 31,
+    "Character": 1,
     "Collateral": 5,
-    "Conditions": 30
+    "Conditions": 29
   },
   "empty_section_rates": {
-    "Capacity": 0.3,
-    "Capital": 0.56,
-    "Character": 0.08,
+    "Capacity": 0.32,
+    "Capital": 0.62,
+    "Character": 0.02,
     "Collateral": 0.1,
-    "Conditions": 0.6
+    "Conditions": 0.58
   },
-  "filtered_reason_count": 226,
-  "memos_with_unstable_raw_reason": 17,
-  "memos_with_unstable_raw_reason_rate": 0.34,
+  "filtered_reason_count": 227,
+  "memos_with_unstable_raw_reason": 18,
+  "memos_with_unstable_raw_reason_rate": 0.36,
   "raw_reason_count": 250,
-  "reasons_removed_by_stability_filter": 24,
+  "reasons_removed_by_stability_filter": 23,
   "sample_indices": [
     1861,
     1270,
@@ -129,10 +129,10 @@
   ],
   "sample_size": 50,
   "stability_metrics": {
-    "diversity_band_w": 0.42584,
+    "diversity_band_w": 0.5526514285714286,
     "n_seeds": 100,
-    "overall_w": 0.9891496093005527,
-    "top_5_w": 1.0
+    "overall_w": 0.9882109395845244,
+    "top_5_w": 0.99802
   },
   "stability_rule": "top 10 mean-ranked features with rank range <= 3 across seeds",
   "stable_feature_count": 10,

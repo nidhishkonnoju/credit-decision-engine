@@ -48,8 +48,8 @@ The leakage audit originally surfaced extreme behavior of the form:
 
 After the audit-based exclusion of the leakage fields, the final audited model reports:
 
-- ROC-AUC: 0.7523 on the untouched test set,
-- 5-fold CV mean ROC-AUC: 0.7513,
+- ROC-AUC: 0.7503 on the untouched test set,
+- 5-fold CV mean ROC-AUC: 0.7518,
 - threshold-aligned CV/test evaluation, which is now directly comparable.
 
 These results support reporting the model as an underwriting-tier classifier rather than as a future-default model.
@@ -93,13 +93,13 @@ The core model is an XGBoost classifier trained with class weighting to reflect 
 The project uses a two-step threshold policy:
 
 1. primary operating threshold at 0.40 for the standard reject vs approve decision,
-2. upper review threshold at approximately 0.6569, derived from validation behavior,
+2. upper review threshold at approximately 0.6547, derived from validation behavior,
 
 with the review band defined as:
 
 - below 0.40: APPROVE
-- 0.40 to 0.6569: REVIEW
-- above 0.6569: REJECT
+- 0.40 to 0.6547: REVIEW
+- above 0.6547: REJECT
 
 This design is more realistic for a human workflow than a binary cutoff alone.
 
@@ -118,7 +118,7 @@ The current logic follows Lin and Wang (2025), "SHAP Stability in Credit Risk Ma
 - calculate Kendall's W overall, for the top five mean-ranked features, and for the six highest-rank-variance features,
 - allow a feature into the memo only when it is in the top 10 by mean rank and its rank range is at most 3.
 
-This matters because mid-tier features can appear highly ranked in a single run yet be unstable under resampling. For bank communication, unstable reasons are worse than no reason at all.
+This matters because mid-tier features can appear highly ranked in a single run yet be unstable across random-seed fits. For bank communication, unstable reasons are worse than no reason at all.
 
 ---
 
@@ -167,22 +167,22 @@ This means all scoring logic remains centralized and consistent with the audited
 
 The current audited model reports the following on the untouched test set:
 
-- ROC-AUC: 0.7523
-- PR-AUC: 0.3034
-- KS: 0.3675
-- recall: 0.7815
-- precision: 0.1953
-- F1: 0.3125
-- F2: 0.4884
+- ROC-AUC: 0.7503
+- PR-AUC: 0.3049
+- KS: 0.3657
+- recall: 0.7670
+- precision: 0.1915
+- F1: 0.3065
+- F2: 0.4791
 - threshold: 0.40
 
 The same threshold is used in the 5-fold CV summary, which preserves comparability.
 
 The three-tier decision distribution on the held-out set is:
 
-- APPROVE: 54.18%
-- REVIEW: 34.14%
-- REJECT: 11.69%
+- APPROVE: 54.14%
+- REVIEW: 34.33%
+- REJECT: 11.53%
 
 This is much closer to an actual officer-facing workflow than a raw binary reject rate.
 

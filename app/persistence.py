@@ -40,8 +40,10 @@ def load_model_artifact(path: str | Path = DEFAULT_ARTIFACT_PATH) -> dict[str, A
         "model",
         "preprocessor",
         "raw_feature_columns",
+        "feature_names",
         "threshold",
         "review_threshold",
+        "stable_feature_names",
     }
     if not isinstance(model_result, dict) or not required_keys <= model_result.keys():
         raise ValueError("Model artifact is missing required scoring-contract fields.")

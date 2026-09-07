@@ -36,6 +36,7 @@ def build_xgboost_model(scale_pos_weight: float) -> XGBClassifier:
         colsample_bytree=0.9,
         scale_pos_weight=scale_pos_weight,
         random_state=42,
+        n_jobs=1,
         eval_metric="logloss",
     )
 

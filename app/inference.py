@@ -11,15 +11,29 @@ from app.preprocessing import handle_missing_sentinels
 
 
 def _normalize_csv_values(df: pd.DataFrame) -> pd.DataFrame:
-    """Normalize common CSV messiness to the same null semantics used during training."""
+    """Normalize common CSV messiness to the same null semantics used during training.
+
+    Only columns where the majority of non-null values are parseable as numbers
+    are coerced. Categorical columns (e.g., EDUCATION) are left as-is.
+    """
     normalized = df.copy()
     for column in normalized.columns:
         if pd.api.types.is_string_dtype(normalized[column]):
-            normalized[column] = normalized[column].astype(str)
-            normalized[column] = normalized[column].replace({"nan": pd.NA, "NaN": pd.NA, "NA": pd.NA, "N/A": pd.NA, "": pd.NA})
-            normalized[column] = normalized[column].str.replace(r"[,$\s]", "", regex=True)
-            normalized[column] = normalized[column].replace("-99999", pd.NA)
-            normalized[column] = pd.to_numeric(normalized[column], errors="coerce")
+            cleaned = normalized[column].astype(str)
+            cleaned = cleaned.replace({"nan": pd.NA, "NaN": pd.NA, "NA": pd.NA, "N/A": pd.NA, "": pd.NA})
+            cleaned = cleaned.str.replace(r"[,$\s]", "", regex=True)
+            cleaned = cleaned.replace("-99999", pd.NA)
+            numeric_attempt = pd.to_numeric(cleaned, errors="coerce")
+            non_null_count = cleaned.notna().sum()
+            numeric_count = numeric_attempt.notna().sum()
+            # Only coerce if the majority of non-null values are parseable as numbers
+            if non_null_count > 0 and numeric_count / non_null_count > 0.5:
+                normalized[column] = numeric_attempt
+            else:
+                # Preserve the original string values with only null normalization
+                normalized[column] = normalized[column].replace(
+                    {"nan": pd.NA, "NaN": pd.NA, "NA": pd.NA, "N/A": pd.NA, "": pd.NA}
+                )
     return normalized
 
 

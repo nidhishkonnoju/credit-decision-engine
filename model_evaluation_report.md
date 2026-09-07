@@ -34,38 +34,38 @@ The exclusion list was not inferred from names alone. It was informed by a leaka
 
 ### Untouched test set
 
-- ROC-AUC: 0.7523
-- PR-AUC: 0.3034
-- KS: 0.3675
-- Recall: 0.7815
-- Precision: 0.1953
-- F1: 0.3125
-- F2: 0.4884
-- Accuracy: 0.6063
-- Predicted reject rate: 0.4582
+- ROC-AUC: 0.7503
+- PR-AUC: 0.3049
+- KS: 0.3657
+- Recall: 0.7670
+- Precision: 0.1915
+- F1: 0.3065
+- F2: 0.4791
+- Accuracy: 0.6026
+- Predicted reject rate: 0.4586
 - Primary threshold: 0.40
 
 ### Five-fold stratified cross-validation
 
 - Primary threshold: 0.40
 - Mean ROC-AUC: 0.7513
-- Mean PR-AUC: 0.3108
-- Mean KS: 0.3712
+- Mean PR-AUC: 0.3076
+- Mean KS: 0.3733
 - Mean recall: 0.7807
-- Mean precision: 0.1934
-- Mean F1: 0.3099
-- Mean F2: 0.4857
+- Mean precision: 0.1939
+- Mean F1: 0.3106
+- Mean F2: 0.4863
 
 ### Three-tier operational output
 
 The final operating model now uses a second, higher review threshold above the primary cutoff. This creates a realistic bank-officer queue instead of a binary reject-only presentation.
 
 - Primary decision threshold: 0.40
-- Review threshold: 0.6569
+- Review threshold: 0.6547
 - Held-out test distribution:
-  - APPROVE: 54.18%
-  - REVIEW: 34.14%
-  - REJECT: 11.69%
+  - APPROVE: 54.14%
+  - REVIEW: 34.33%
+  - REJECT: 11.53%
 
 No bucket is empty.
 
@@ -76,9 +76,9 @@ varying only `random_state`. Each model is evaluated on the same fixed 512-row p
 of the untouched test matrix. Features are ranked by mean absolute SHAP value, and
 Kendall's W is calculated from the resulting rank matrix.
 
-- Overall W: 0.9891
-- Top-five mean-ranked feature W: 1.0000
-- Six highest-rank-variance feature W: 0.4258
+- Overall W: 0.9882
+- Top-five mean-ranked feature W: 0.9980
+- Six highest-rank-variance feature W: 0.5527
 
 A feature is eligible for a customer-facing explanation only when it is among the top
 10 features by mean rank and its rank range across the 100 seeds is at most 3. The
@@ -92,16 +92,16 @@ reused on subsequent runs.
 
 | Measure | Result |
 |---|---:|
-| Memos with an unstable raw top-five reason | 17 / 50 (34.00%) |
+| Memos with an unstable raw top-five reason | 18 / 50 (36.00%) |
 | Raw reasons across the sample | 250 |
-| Stability-filtered reasons across the sample | 226 |
-| Reasons removed by the stability filter | 24 |
+| Stability-filtered reasons across the sample | 227 |
+| Reasons removed by the stability filter | 23 |
 | APPROVE / REVIEW / REJECT | 30 / 16 / 4 |
-| Empty Character sections | 4 / 50 (8.00%) |
-| Empty Capacity sections | 15 / 50 (30.00%) |
-| Empty Capital sections | 28 / 50 (56.00%) |
+| Empty Character sections | 1 / 50 (2.00%) |
+| Empty Capacity sections | 16 / 50 (32.00%) |
+| Empty Capital sections | 31 / 50 (62.00%) |
 | Empty Collateral sections | 5 / 50 (10.00%) |
-| Empty Conditions sections | 30 / 50 (60.00%) |
+| Empty Conditions sections | 29 / 50 (58.00%) |
 
 The evaluator produced identical output on two consecutive runs. These results show
 that the stability filter changes the generated explanations materially while also

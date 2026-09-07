@@ -10,6 +10,7 @@ from sklearn.model_selection import train_test_split
 from app.cam import (
     FEATURE_LABEL_MAP,
     FEATURE_TO_5C,
+    FEATURE_TO_5C_RATIONALE,
     FIVE_CATEGORIES,
     generate_cam,
     generate_credit_appraisal_memo,
@@ -316,6 +317,8 @@ class PreprocessingFairnessTest(unittest.TestCase):
         validate_feature_mapping(data["feature_columns"])
         self.assertEqual(set(data["feature_columns"]), set(FEATURE_TO_5C))
         self.assertTrue(all(category in FIVE_CATEGORIES for category in FEATURE_TO_5C.values()))
+        self.assertEqual(set(data["feature_columns"]), set(FEATURE_TO_5C_RATIONALE))
+        self.assertTrue(all(len(reason.split()) >= 8 for reason in FEATURE_TO_5C_RATIONALE.values()))
 
 
 class SeedStabilityTest(unittest.TestCase):
