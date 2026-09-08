@@ -87,7 +87,12 @@ def handle_missing_sentinels(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def build_preprocessor(X: pd.DataFrame) -> ColumnTransformer:
-    """Create a simple preprocessor for numeric and categorical feature columns."""
+    """Create a preprocessor for numeric and categorical feature columns.
+
+    Numeric columns use median imputation with missing-indicator flags so that
+    the model can learn from missingness patterns (e.g. ``CC_utilization`` is
+    missing for 93% of applicants — "no credit card" is informative signal).
+    """
     numeric_columns = X.select_dtypes(include=["number"]).columns.tolist()
     categorical_columns = [col for col in X.columns if col not in numeric_columns]
 
@@ -99,7 +104,7 @@ def build_preprocessor(X: pd.DataFrame) -> ColumnTransformer:
                 "numeric",
                 Pipeline(
                     steps=[
-                        ("imputer", SimpleImputer(strategy="median")),
+                        ("imputer", SimpleImputer(strategy="median", add_indicator=True)),
                         ("scaler", StandardScaler()),
                     ]
                 ),

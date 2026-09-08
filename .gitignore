@@ -1,4 +1,5 @@
 .env
+.env.example
 .venv/
 __pycache__/
 .pytest_cache/
@@ -6,3 +7,6 @@ __pycache__/
 artifacts/*.joblib
 Credit Appraisal Memos for reference/
 Research Papers/
+Company Financial Records/
+Dataset/Unseen_Dataset.xlsx
+output/
