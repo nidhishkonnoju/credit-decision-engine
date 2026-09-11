@@ -1,0 +1,145 @@
+Work through the phases below in order. Stop after each phase and post its status table before
+starting the next — do not batch multiple phases into one pass. This mirrors how the last several
+rounds of work on this repo have gone: claims without pasted evidence have turned out wrong often
+enough that no claim of "done" here will be accepted without a real command and its real output.
+
+===========================================================
+GROUND RULES
+===========================================================
+
+1. Every "done" claim needs a real command and its real pasted output in this response, not a
+   description of what it would show.
+
+2. Before claiming something is fixed, show the OLD behavior (or the current state) and the NEW
+   behavior in the same response — a before/after, not just an after.
+
+3. At the end of each phase, post a table:
+
+   | Task | Status (Done/Partial/Not Started) | Command run | Actual output |
+
+   If a row is Partial or Not Started, say exactly what's missing. Do not round up.
+
+4. If you find that a task was already done in a previous session, verify it's still true right
+   now (things in this repo have regressed or turned out to be stale before) — don't assume past
+   work is intact without checking.
+
+===========================================================
+KNOWN CURRENT STATE — verified directly against the live repo, don't re-litigate, just fix
+===========================================================
+
+- FEATURE_TO_5C in app/cam.py still maps CC_Flag, CC_TL, PL_Flag, PL_TL, Unsecured_TL, and
+  max_unsec_exposure_inPct to "Collateral", despite their own FEATURE_TO_5C_RATIONALE text
+  describing them as unsecured/collateral-free. This has been checked and found unfixed across
+  three separate verifications now. Do not report this as done again without pasting the actual
+  dict contents proving the reassignment.
+- build_xgboost_model() in app/modeling.py does not pin n_jobs. compute_seed_stability() already
+  does (n_jobs=1), for documented reasons (XGBoost's multi-threaded histogram construction isn't
+  bit-for-bit deterministic even with a fixed random_state). Running main.py twice with identical
+  code has produced different ROC-AUC values (0.7538, 0.7523, 0.7503, 0.7513 across separate
+  runs) — a spread of ~0.003, which is larger than at least one previously-reported "improvement"
+  delta attributed to a code change. This makes any AUC delta claim currently unverifiable.
+- Documentation Examples/ (~6MB of .docx files) is committed directly to git, not covered by the
+  existing .gitattributes LFS rule that already covers Company Financial Records/.
+- Six loosely-related markdown files currently sit at repo root: coding_agent_plan.md,
+  presentation_materials.md, project_paper_documentation.md, novelty_ledger.md,
+  model_evaluation_report.md, project_context_technical.md.
+
+===========================================================
+PHASE 1 — Fix the Collateral/Capital mapping (highest priority, do this first)
+===========================================================
+
+1. In app/cam.py, reassign CC_Flag, CC_TL, PL_Flag, PL_TL, Unsecured_TL, and
+   max_unsec_exposure_inPct from "Collateral" to "Capital" in FEATURE_TO_5C.
+2. Update FEATURE_TO_5C_RATIONALE for each of those six to reference Capital (debt burden /
+   exposure affecting net worth and capacity to absorb shock), not Collateral.
+3. Confirm HL_Flag, GL_Flag, Auto_TL, Gold_TL, Home_TL, Secured_TL remain under Collateral —
+   these are the genuinely asset-backed ones and should NOT move.
+4. Re-run the test asserting every model feature has exactly one 5C category — it should still
+   pass (this is a reassignment, not a removal).
+5. Regenerate one sample CAM (main.py --input applicant.example.json --cam) and paste the output,
+   confirming none of the six reassigned features appear under a "Collateral" heading anymore.
+
+Definition of Done: paste the actual FEATURE_TO_5C dict entries for all 14 originally-Collateral
+features showing the post-fix category for each, plus the regenerated CAM output.
+
+Post Phase 1's status table. Stop there.
+
+===========================================================
+PHASE 2 — Pin n_jobs for the main model, then re-verify determinism
+===========================================================
+
+1. In build_xgboost_model() (app/modeling.py), pin n_jobs=1, matching what
+   compute_seed_stability() already does and for the same documented reason.
+2. Run main.py --retrain twice in a row, from a clean artifacts/ directory each time (delete the
+   artifact between runs so both are genuine fresh trains, not one train + one load).
+3. Paste both runs' full Model metrics output. ROC-AUC, PR-AUC, KS, precision, recall, F1, F2 —
+   all of them — should now be identical or differ only in the last reported decimal place.
+4. If they are NOT identical after pinning n_jobs=1, do not paper over it — investigate further
+   (check for other non-determinism sources: SHAP sampling, threshold search ties, etc.) and
+   report what you find rather than reporting a false "fixed" status.
+5. Once determinism is confirmed, re-run evaluate_stability_filter.py twice and confirm the
+   ablation numbers (memos_with_unstable_raw_reason_rate, etc.) are now also identical between
+   runs — this was flagged as broken by exactly this root cause several checks ago and was never
+   confirmed fixed.
+
+Definition of Done: paste both full runs from step 3, explicitly confirming identical output, and
+the same for step 5's ablation rerun.
+
+Post Phase 2's status table. Stop there.
+
+===========================================================
+PHASE 3 — File consolidation (do this after 1 and 2, not before)
+===========================================================
+
+Code merges:
+1. Create app/serving.py. Move ARTIFACT_VERSION, DEFAULT_ARTIFACT_PATH, save_model_artifact(),
+   load_model_artifact() (currently in app/persistence.py) AND _normalize_csv_values(),
+   load_applicant_json(), predict_applicant(), batch_score_csv() (currently in app/inference.py)
+   into it. Delete app/persistence.py and app/inference.py. Update imports in main.py,
+   evaluate_stability_filter.py (or wherever it lands after task 2 below), and
+   tests/test_modeling.py.
+2. Fold evaluate_stability_filter.py into main.py as an --evaluate flag (move
+   load_or_create_sample(), evaluate(), and the CLI logic in). Delete
+   evaluate_stability_filter.py.
+3. Move the TestPDFReportSmoke class from tests/test_pdf_report.py into tests/test_modeling.py.
+   Delete tests/test_pdf_report.py.
+4. Do NOT delete tests/conftest.py or merge it into test_modeling.py — it's already proven
+   useful across multiple test files and will likely be needed again.
+5. Do NOT merge app/modeling.py with anything — it should remain training/evaluation/stability
+   only, so a future front-end or API layer can import app/serving.py alone without pulling in
+   XGBoost training parameters or the 100-seed stability computation.
+
+Documentation consolidation:
+6. Create docs/methodology.md combining novelty_ledger.md, project_context_technical.md, and
+   model_evaluation_report.md — these are all "what was done and why, with results," just written
+   at different times. Preserve all real content; don't summarize away specific numbers or
+   findings.
+7. Create docs/presentation.md from presentation_materials.md and project_paper_documentation.md.
+8. Delete coding_agent_plan.md — it's a working document for a completed set of phases, not
+   project documentation. Git history preserves it if it's needed again.
+9. Move Documentation Examples/ under the existing LFS rule in .gitattributes, matching how
+   Company Financial Records/ is already handled — OR remove it from the repo if it's not
+   actually needed alongside the code (the "Cognitive Attention Monitoring" file in particular
+   looks unrelated to this project; confirm what it actually is before deciding).
+
+Verification (mandatory, not optional — this phase claims "no logic altered"):
+10. Before making any changes, run:
+    python main.py --input applicant.example.json --cam --pdf output/before.pdf > /tmp/before.log
+    After all changes:
+    python main.py --input applicant.example.json --cam --pdf output/after.pdf > /tmp/after.log
+    diff /tmp/before.log /tmp/after.log        # paste the result — should be empty
+    cmp output/before.pdf output/after.pdf     # paste the result — identical or only timestamp differs
+11. Run the full test suite before and after, paste both full results.
+
+Definition of Done: the diff/cmp output from step 10, both full test runs from step 11, and the
+final file tree (find . -type f, excluding Dataset/Research Papers/Company Financial Records)
+showing the reduced count.
+
+Post Phase 3's status table. Stop there.
+
+===========================================================
+FINAL CHECK
+===========================================================
+
+One consolidated table across all three phases, same 4 columns. Any row not Done, say why. Paste
+the full final test suite output and the final file tree.

@@ -16,7 +16,7 @@ from app.cam import (
     generate_credit_appraisal_memo,
     validate_feature_mapping,
 )
-from app.inference import _normalize_csv_values, batch_score_csv, predict_applicant
+from app.inference import _normalize_csv_values, batch_score_csv, load_applicant_from_csv, predict_applicant
 from app.modeling import (
     compute_seed_stability,
     evaluate_model,
@@ -299,6 +299,74 @@ class ModelingSmokeTest(unittest.TestCase):
             self.assertEqual(loaded["raw_feature_columns"], self.model_result["raw_feature_columns"])
             self.assertEqual(loaded["threshold"], self.model_result["threshold"])
             self.assertEqual(loaded["review_threshold"], self.model_result["review_threshold"])
+
+    def test_sample_applicants_csv_scoring(self):
+        sample_path = Path("sample_applicants.csv")
+        self.assertTrue(sample_path.exists(), "sample_applicants.csv should exist in repository root")
+        results = batch_score_csv(sample_path, self.model_result)
+        self.assertEqual(len(results), 6)
+        decisions = [r["decision"] for r in results]
+        self.assertEqual(decisions.count("APPROVE"), 2)
+        self.assertEqual(decisions.count("REVIEW"), 2)
+        self.assertEqual(decisions.count("REJECT"), 2)
+        self.assertEqual(results[0].get("applicant_id"), "APP-1001")
+        self.assertEqual(results[0].get("profile_name"), "Prime Low-Risk Borrower")
+
+    def test_load_applicant_from_csv_by_index_and_id(self):
+        sample_path = Path("sample_applicants.csv")
+        # Test loading by row index
+        df_0, meta_0 = load_applicant_from_csv(
+            sample_path, 0, self.model_result["raw_feature_columns"]
+        )
+        self.assertEqual(len(df_0), 1)
+        self.assertEqual(meta_0["applicant_id"], "APP-1001")
+        self.assertEqual(meta_0["row_index"], 0)
+
+        # Test loading by applicant_id
+        df_id, meta_id = load_applicant_from_csv(
+            sample_path, "APP-1003", self.model_result["raw_feature_columns"]
+        )
+        self.assertEqual(len(df_id), 1)
+        self.assertEqual(meta_id["applicant_id"], "APP-1003")
+        self.assertEqual(meta_id["row_index"], 2)
+
+        # Test out of range index raises IndexError
+        with self.assertRaises(IndexError):
+            load_applicant_from_csv(
+                sample_path, 999, self.model_result["raw_feature_columns"]
+            )
+
+        # Test invalid applicant_id raises ValueError
+        with self.assertRaises(ValueError):
+            load_applicant_from_csv(
+                sample_path, "NONEXISTENT-ID", self.model_result["raw_feature_columns"]
+            )
+
+
+class SampleCSVTest(unittest.TestCase):
+    """Fast tests verifying sample CSV batch scoring and row selection using persisted model."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.model_result = load_model_artifact()
+
+    def test_sample_csv_batch_scoring(self):
+        sample_path = Path("sample_applicants.csv")
+        self.assertTrue(sample_path.exists())
+        results = batch_score_csv(sample_path, self.model_result)
+        self.assertEqual(len(results), 6)
+        decisions = [r["decision"] for r in results]
+        self.assertEqual(decisions.count("APPROVE"), 2)
+        self.assertEqual(decisions.count("REVIEW"), 2)
+        self.assertEqual(decisions.count("REJECT"), 2)
+
+    def test_load_applicant_from_csv(self):
+        sample_path = Path("sample_applicants.csv")
+        df_row, meta = load_applicant_from_csv(sample_path, "APP-1001", self.model_result["raw_feature_columns"])
+        self.assertEqual(meta["applicant_id"], "APP-1001")
+        self.assertEqual(len(df_row), 1)
+        pred = predict_applicant(self.model_result, df_row)
+        self.assertEqual(pred["decision"], "APPROVE")
 
 
 class PreprocessingFairnessTest(unittest.TestCase):
