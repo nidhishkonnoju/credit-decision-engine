@@ -1,28 +1,28 @@
 {
   "decision_counts": {
-    "APPROVE": 30,
+    "APPROVE": 28,
     "REJECT": 4,
-    "REVIEW": 16
+    "REVIEW": 18
   },
   "empty_section_counts": {
-    "Capacity": 16,
-    "Capital": 31,
+    "Capacity": 17,
+    "Capital": 16,
     "Character": 1,
-    "Collateral": 5,
+    "Collateral": 13,
     "Conditions": 29
   },
   "empty_section_rates": {
-    "Capacity": 0.32,
-    "Capital": 0.62,
+    "Capacity": 0.34,
+    "Capital": 0.32,
     "Character": 0.02,
-    "Collateral": 0.1,
+    "Collateral": 0.26,
     "Conditions": 0.58
   },
-  "filtered_reason_count": 227,
+  "filtered_reason_count": 223,
   "memos_with_unstable_raw_reason": 18,
   "memos_with_unstable_raw_reason_rate": 0.36,
   "raw_reason_count": 250,
-  "reasons_removed_by_stability_filter": 23,
+  "reasons_removed_by_stability_filter": 27,
   "sample_indices": [
     1861,
     1270,
@@ -129,12 +129,12 @@
   ],
   "sample_size": 50,
   "stability_metrics": {
-    "diversity_band_w": 0.5526514285714286,
+    "diversity_band_w": 0.6679428571428572,
     "n_seeds": 100,
-    "overall_w": 0.9882109395845244,
-    "top_5_w": 0.99802
+    "overall_w": 0.9898375885774723,
+    "top_5_w": 1.0
   },
   "stability_rule": "top 10 mean-ranked features with rank range <= 3 across seeds",
   "stable_feature_count": 10,
-  "unstable_feature_count": 44
+  "unstable_feature_count": 51
 }
