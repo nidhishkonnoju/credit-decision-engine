@@ -41,8 +41,16 @@ def build_xgboost_model(scale_pos_weight: float) -> XGBClassifier:
     )
 
 
-def fit_credit_model(data: dict[str, Any]) -> dict[str, Any]:
-    """Train a compact XGBoost model and select threshold on a validation split carved from training data."""
+def fit_credit_model(
+    data: dict[str, Any],
+    stability_n_seeds: int = SEED_STABILITY_RUNS,
+    cross_validation_folds: int = 5,
+) -> dict[str, Any]:
+    """Train the production model; optional smaller settings keep unit tests fast.
+
+    Production callers use the defaults: 100 seed fits and five CV folds. Test
+    callers may reduce only the repeated validation work, not the model contract.
+    """
     from app.cam import validate_feature_mapping
 
     validate_feature_mapping(data["feature_columns"])
@@ -73,6 +81,7 @@ def fit_credit_model(data: dict[str, Any]) -> dict[str, Any]:
         X_train,
         y_train,
         threshold=threshold_result["threshold"],
+        n_splits=cross_validation_folds,
     )
 
     feature_names = data["preprocessor"].get_feature_names_out().tolist()
@@ -95,6 +104,7 @@ def fit_credit_model(data: dict[str, Any]) -> dict[str, Any]:
             **build_xgboost_model(scale).get_params(),
             "feature_names": feature_names,
         },
+        n_seeds=stability_n_seeds,
     )
 
     return {

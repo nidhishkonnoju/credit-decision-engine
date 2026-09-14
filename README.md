@@ -30,6 +30,10 @@ The implementation is intentionally lightweight and designed to be easy to run l
 - `Dataset/` — expected input data files (`External_Cibil_Dataset.xlsx` and `Internal_Bank_Dataset.xlsx`)
 - `main.py` — training entry point and CLI runner
 - `evaluate_stability_filter.py` — deterministic Phase 4 ablation and coverage evaluation
+- `run_research_experiments.py` — research-only SHAP reliability protocol; it compares
+  the audited feature policy with a proxy-inclusive diagnostic policy and never changes
+  the production scoring artifact
+- `research_protocol.md` — frozen research questions, conditions, metrics, and claim limits
 - `evaluation/` — fixed applicant sample and recorded evaluation results
 - `applicant.example.json` — sample applicant payload for local scoring
 - `requirements.txt` — project dependencies
@@ -99,6 +103,21 @@ that would have contained an unstable feature, reasons removed by filtering, dec
 counts, and empty-section coverage for each 5C category.
 
 The sample applicant file is a flat JSON object with the same feature names used in the trained model.
+
+## Research experiments
+
+The production model continues to exclude audited label-proxy fields. The separate
+research runner tests whether a stability criterion could nevertheless make such a
+proxy look reliable. Start with a small pilot:
+
+```powershell
+python .\run_research_experiments.py --seeds 20 --workers 4 --include-determinism-check
+```
+
+For the final paper run, use `--seeds 100`. The primary run uses only the diagnostic
+feature policy; add `--policies audited proxy_inclusive_diagnostic` for an optional
+feature-policy sensitivity replication. See `research_protocol.md` for the
+pre-specified conditions, measures, and required cautious terminology.
 
 ## Model behavior
 

@@ -1,0 +1,720 @@
+{
+  "source_file": "evaluation\\research_results_100_seeds.json",
+  "units": {
+    "encoded_features": 122,
+    "proxy_encoded": 61,
+    "nonproxy_encoded": 61,
+    "raw_features": 83,
+    "proxy_raw": 35,
+    "local_applicants": 100,
+    "seeds_per_stochastic_condition": 100
+  },
+  "families": {
+    "F1": [
+      {
+        "family": "F1_encoded_proxy_vs_nonproxy",
+        "condition": "bundled_baseline",
+        "metric": "mean_rank",
+        "unit": "encoded feature",
+        "n_proxy": 61,
+        "n_nonproxy": 61,
+        "median_proxy": 60.09,
+        "median_nonproxy": 59.85,
+        "u_statistic": 1748.5,
+        "p_value": 0.5680462446099799,
+        "effect_rank_biserial": -0.060198871271163634,
+        "effect_ci95": [
+          -0.2719766191883902,
+          0.15614082235958082
+        ],
+        "effect_direction": "positive = proxy group has larger values",
+        "p_holm": 1.0
+      },
+      {
+        "family": "F1_encoded_proxy_vs_nonproxy",
+        "condition": "bundled_baseline",
+        "metric": "rank_range",
+        "unit": "encoded feature",
+        "n_proxy": 61,
+        "n_nonproxy": 61,
+        "median_proxy": 40.0,
+        "median_nonproxy": 42.0,
+        "u_statistic": 1498.5,
+        "p_value": 0.06407668706855438,
+        "effect_rank_biserial": -0.194571351787154,
+        "effect_ci95": [
+          -0.39666756248320345,
+          0.0158559527008868
+        ],
+        "effect_direction": "positive = proxy group has larger values",
+        "p_holm": 0.38446012241132627
+      },
+      {
+        "family": "F1_encoded_proxy_vs_nonproxy",
+        "condition": "bundled_baseline",
+        "metric": "stability_score",
+        "unit": "encoded feature",
+        "n_proxy": 61,
+        "n_nonproxy": 61,
+        "median_proxy": 0.019493,
+        "median_nonproxy": 0.008495,
+        "u_statistic": 2399.5,
+        "p_value": 0.005820144808112953,
+        "effect_rank_biserial": 0.28970706799247514,
+        "effect_ci95": [
+          0.0841171728030099,
+          0.48643509809191066
+        ],
+        "effect_direction": "positive = proxy group has larger values",
+        "p_holm": 0.05238130327301657
+      },
+      {
+        "family": "F1_encoded_proxy_vs_nonproxy",
+        "condition": "row_sampling",
+        "metric": "mean_rank",
+        "unit": "encoded feature",
+        "n_proxy": 61,
+        "n_nonproxy": 61,
+        "median_proxy": 51.0,
+        "median_nonproxy": 62.02,
+        "u_statistic": 1771.0,
+        "p_value": 0.6485912247861054,
+        "effect_rank_biserial": -0.04810534802472455,
+        "effect_ci95": [
+          -0.26203977425423275,
+          0.16744154797097527
+        ],
+        "effect_direction": "positive = proxy group has larger values",
+        "p_holm": 1.0
+      },
+      {
+        "family": "F1_encoded_proxy_vs_nonproxy",
+        "condition": "row_sampling",
+        "metric": "rank_range",
+        "unit": "encoded feature",
+        "n_proxy": 61,
+        "n_nonproxy": 61,
+        "median_proxy": 0.0,
+        "median_nonproxy": 1.0,
+        "u_statistic": 1691.5,
+        "p_value": 0.3502265911911604,
+        "effect_rank_biserial": -0.09083579682880949,
+        "effect_ci95": [
+          -0.28487637731792526,
+          0.10374227358237022
+        ],
+        "effect_direction": "positive = proxy group has larger values",
+        "p_holm": 1.0
+      },
+      {
+        "family": "F1_encoded_proxy_vs_nonproxy",
+        "condition": "row_sampling",
+        "metric": "stability_score",
+        "unit": "encoded feature",
+        "n_proxy": 61,
+        "n_nonproxy": 61,
+        "median_proxy": 1.0,
+        "median_nonproxy": 0.980777,
+        "u_statistic": 2040.5,
+        "p_value": 0.3203155967531166,
+        "effect_rank_biserial": 0.09674818597151313,
+        "effect_ci95": [
+          -0.09486697124428922,
+          0.2891897339424882
+        ],
+        "effect_direction": "positive = proxy group has larger values",
+        "p_holm": 1.0
+      },
+      {
+        "family": "F1_encoded_proxy_vs_nonproxy",
+        "condition": "feature_sampling",
+        "metric": "mean_rank",
+        "unit": "encoded feature",
+        "n_proxy": 61,
+        "n_nonproxy": 61,
+        "median_proxy": 63.96,
+        "median_nonproxy": 57.84,
+        "u_statistic": 1748.5,
+        "p_value": 0.5680462446099799,
+        "effect_rank_biserial": -0.060198871271163634,
+        "effect_ci95": [
+          -0.2730515990325181,
+          0.1558720773985487
+        ],
+        "effect_direction": "positive = proxy group has larger values",
+        "p_holm": 1.0
+      },
+      {
+        "family": "F1_encoded_proxy_vs_nonproxy",
+        "condition": "feature_sampling",
+        "metric": "rank_range",
+        "unit": "encoded feature",
+        "n_proxy": 61,
+        "n_nonproxy": 61,
+        "median_proxy": 11.0,
+        "median_nonproxy": 35.0,
+        "u_statistic": 1479.5,
+        "p_value": 0.051194426342426824,
+        "effect_rank_biserial": -0.2047836603063693,
+        "effect_ci95": [
+          -0.4066111260413867,
+          0.004844127922601379
+        ],
+        "effect_direction": "positive = proxy group has larger values",
+        "p_holm": 0.35836098439698777
+      },
+      {
+        "family": "F1_encoded_proxy_vs_nonproxy",
+        "condition": "feature_sampling",
+        "metric": "stability_score",
+        "unit": "encoded feature",
+        "n_proxy": 61,
+        "n_nonproxy": 61,
+        "median_proxy": 0.190172,
+        "median_nonproxy": 0.01779,
+        "u_statistic": 2345.0,
+        "p_value": 0.01316684727951197,
+        "effect_rank_biserial": 0.26041386723998916,
+        "effect_ci95": [
+          0.05401101854340239,
+          0.45982262832571896
+        ],
+        "effect_direction": "positive = proxy group has larger values",
+        "p_holm": 0.10533477823609576
+      }
+    ],
+    "F2": [
+      {
+        "family": "F2_raw_proxy_vs_nonproxy",
+        "condition": "bundled_baseline",
+        "metric": "mean_rank",
+        "unit": "raw feature",
+        "n_proxy": 35,
+        "n_nonproxy": 48,
+        "median_proxy": 49.449999999999996,
+        "median_nonproxy": 59.39,
+        "u_statistic": 592.5,
+        "p_value": 0.022744042328469948,
+        "effect_rank_biserial": -0.2946428571428571,
+        "effect_ci95": [
+          -0.5446428571428572,
+          -0.03452380952380951
+        ],
+        "p_holm": 0.07956334563777302
+      },
+      {
+        "family": "F2_raw_proxy_vs_nonproxy",
+        "condition": "bundled_baseline",
+        "metric": "stability_score",
+        "unit": "raw feature",
+        "n_proxy": 35,
+        "n_nonproxy": 48,
+        "median_proxy": 0.257732,
+        "median_nonproxy": 0.008725,
+        "u_statistic": 1353.0,
+        "p_value": 2.290007269200777e-06,
+        "effect_rank_biserial": 0.6107142857142858,
+        "effect_ci95": [
+          0.4011904761904761,
+          0.7892857142857144
+        ],
+        "p_holm": 1.3740043615204663e-05
+      },
+      {
+        "family": "F2_raw_proxy_vs_nonproxy",
+        "condition": "row_sampling",
+        "metric": "mean_rank",
+        "unit": "raw feature",
+        "n_proxy": 35,
+        "n_nonproxy": 48,
+        "median_proxy": 49.0,
+        "median_nonproxy": 59.510000000000005,
+        "u_statistic": 587.0,
+        "p_value": 0.019890836409443256,
+        "effect_rank_biserial": -0.30119047619047623,
+        "effect_ci95": [
+          -0.5345238095238095,
+          -0.04880952380952386
+        ],
+        "p_holm": 0.07956334563777302
+      },
+      {
+        "family": "F2_raw_proxy_vs_nonproxy",
+        "condition": "row_sampling",
+        "metric": "stability_score",
+        "unit": "raw feature",
+        "n_proxy": 35,
+        "n_nonproxy": 48,
+        "median_proxy": 0.799401,
+        "median_nonproxy": 0.9330895,
+        "u_statistic": 734.5,
+        "p_value": 0.3260174629513142,
+        "effect_rank_biserial": -0.1255952380952381,
+        "effect_ci95": [
+          -0.3839285714285714,
+          0.13630952380952377
+        ],
+        "p_holm": 0.3260174629513142
+      },
+      {
+        "family": "F2_raw_proxy_vs_nonproxy",
+        "condition": "feature_sampling",
+        "metric": "mean_rank",
+        "unit": "raw feature",
+        "n_proxy": 35,
+        "n_nonproxy": 48,
+        "median_proxy": 49.669999999999995,
+        "median_nonproxy": 57.152499999999996,
+        "u_statistic": 601.5,
+        "p_value": 0.028184975471707802,
+        "effect_rank_biserial": -0.2839285714285714,
+        "effect_ci95": [
+          -0.5321428571428571,
+          -0.02736607142857166
+        ],
+        "p_holm": 0.07956334563777302
+      },
+      {
+        "family": "F2_raw_proxy_vs_nonproxy",
+        "condition": "feature_sampling",
+        "metric": "stability_score",
+        "unit": "raw feature",
+        "n_proxy": 35,
+        "n_nonproxy": 48,
+        "median_proxy": 0.40451050000000005,
+        "median_nonproxy": 0.015247,
+        "u_statistic": 1242.0,
+        "p_value": 0.0002135635885673359,
+        "effect_rank_biserial": 0.47857142857142865,
+        "effect_ci95": [
+          0.23928571428571432,
+          0.6964285714285714
+        ],
+        "p_holm": 0.0010678179428366796
+      }
+    ],
+    "F3": [
+      {
+        "family": "F3_spearman_proxy_auc",
+        "condition": "bundled_baseline",
+        "metric": "mean_rank",
+        "unit": "raw feature",
+        "n": 83,
+        "spearman_rho": -0.3147542707716772,
+        "p_permutation": 0.0044995500449955,
+        "note": "observational association; not causal evidence",
+        "p_holm": 0.017998200179982
+      },
+      {
+        "family": "F3_spearman_proxy_auc",
+        "condition": "bundled_baseline",
+        "metric": "stability_score",
+        "unit": "raw feature",
+        "n": 83,
+        "spearman_rho": 0.4758601152672231,
+        "p_permutation": 9.999000099990002e-05,
+        "note": "observational association; not causal evidence",
+        "p_holm": 0.0005999400059994001
+      },
+      {
+        "family": "F3_spearman_proxy_auc",
+        "condition": "row_sampling",
+        "metric": "mean_rank",
+        "unit": "raw feature",
+        "n": 83,
+        "spearman_rho": 0.1371138296863002,
+        "p_permutation": 0.21287871212878712,
+        "note": "observational association; not causal evidence",
+        "p_holm": 0.21287871212878712
+      },
+      {
+        "family": "F3_spearman_proxy_auc",
+        "condition": "row_sampling",
+        "metric": "stability_score",
+        "unit": "raw feature",
+        "n": 83,
+        "spearman_rho": -0.24941442868180855,
+        "p_permutation": 0.0225977402259774,
+        "note": "observational association; not causal evidence",
+        "p_holm": 0.0451954804519548
+      },
+      {
+        "family": "F3_spearman_proxy_auc",
+        "condition": "feature_sampling",
+        "metric": "mean_rank",
+        "unit": "raw feature",
+        "n": 83,
+        "spearman_rho": -0.2971987241439891,
+        "p_permutation": 0.0053994600539946005,
+        "note": "observational association; not causal evidence",
+        "p_holm": 0.017998200179982
+      },
+      {
+        "family": "F3_spearman_proxy_auc",
+        "condition": "feature_sampling",
+        "metric": "stability_score",
+        "unit": "raw feature",
+        "n": 83,
+        "spearman_rho": 0.4392934366551893,
+        "p_permutation": 9.999000099990002e-05,
+        "note": "observational association; not causal evidence",
+        "p_holm": 0.0005999400059994001
+      }
+    ],
+    "F4": [
+      {
+        "family": "F4_topk_enrichment",
+        "condition": "bundled_baseline",
+        "top_k": 10,
+        "unit": "encoded feature",
+        "universe": 122,
+        "proxy_in_universe": 61,
+        "proxy_in_topk": 9,
+        "expected_if_neutral": 5.0,
+        "p_value": 0.008329786683452125,
+        "p_holm": 0.0333191467338085
+      },
+      {
+        "family": "F4_topk_enrichment",
+        "condition": "bundled_baseline",
+        "top_k": 20,
+        "unit": "encoded feature",
+        "universe": 122,
+        "proxy_in_universe": 61,
+        "proxy_in_topk": 16,
+        "expected_if_neutral": 10.0,
+        "p_value": 0.0030258488846596765,
+        "p_holm": 0.01815509330795806
+      },
+      {
+        "family": "F4_topk_enrichment",
+        "condition": "row_sampling",
+        "top_k": 10,
+        "unit": "encoded feature",
+        "universe": 122,
+        "proxy_in_universe": 61,
+        "proxy_in_topk": 9,
+        "expected_if_neutral": 5.0,
+        "p_value": 0.008329786683452125,
+        "p_holm": 0.0333191467338085
+      },
+      {
+        "family": "F4_topk_enrichment",
+        "condition": "row_sampling",
+        "top_k": 20,
+        "unit": "encoded feature",
+        "universe": 122,
+        "proxy_in_universe": 61,
+        "proxy_in_topk": 14,
+        "expected_if_neutral": 10.0,
+        "p_value": 0.04257567680437165,
+        "p_holm": 0.04257567680437165
+      },
+      {
+        "family": "F4_topk_enrichment",
+        "condition": "feature_sampling",
+        "top_k": 10,
+        "unit": "encoded feature",
+        "universe": 122,
+        "proxy_in_universe": 61,
+        "proxy_in_topk": 9,
+        "expected_if_neutral": 5.0,
+        "p_value": 0.008329786683452125,
+        "p_holm": 0.0333191467338085
+      },
+      {
+        "family": "F4_topk_enrichment",
+        "condition": "feature_sampling",
+        "top_k": 20,
+        "unit": "encoded feature",
+        "universe": 122,
+        "proxy_in_universe": 61,
+        "proxy_in_topk": 16,
+        "expected_if_neutral": 10.0,
+        "p_value": 0.0030258488846596765,
+        "p_holm": 0.01815509330795806
+      }
+    ],
+    "F5": [
+      {
+        "family": "F5_paired_feature_level",
+        "comparison": "bundled_baseline vs row_sampling",
+        "metric": "mean_rank",
+        "unit": "encoded feature (paired across conditions)",
+        "n_pairs": 122,
+        "n_nonzero_differences": 116,
+        "median_difference_right_minus_left": -0.07000000000000028,
+        "median_diff_ci95": [
+          -1.25,
+          0.6700000000000017
+        ],
+        "p_value": 0.8020489095185537,
+        "effect_rank_biserial": -0.02681992337164751,
+        "effect_direction": "positive = right condition larger",
+        "p_holm": 1.0
+      },
+      {
+        "family": "F5_paired_feature_level",
+        "comparison": "bundled_baseline vs row_sampling",
+        "metric": "rank_variance",
+        "unit": "encoded feature (paired across conditions)",
+        "n_pairs": 122,
+        "n_nonzero_differences": 116,
+        "median_difference_right_minus_left": -66.24555000000001,
+        "median_diff_ci95": [
+          -104.2325,
+          -41.1079
+        ],
+        "p_value": 7.776835668113205e-14,
+        "effect_rank_biserial": -0.7995873857942823,
+        "effect_direction": "positive = right condition larger",
+        "p_holm": 6.221468534490564e-13
+      },
+      {
+        "family": "F5_paired_feature_level",
+        "comparison": "bundled_baseline vs row_sampling",
+        "metric": "rank_range",
+        "unit": "encoded feature (paired across conditions)",
+        "n_pairs": 122,
+        "n_nonzero_differences": 115,
+        "median_difference_right_minus_left": -37.5,
+        "median_diff_ci95": [
+          -42.0,
+          -32.0
+        ],
+        "p_value": 2.0324929849351704e-14,
+        "effect_rank_biserial": -0.8217391304347826,
+        "effect_direction": "positive = right condition larger",
+        "p_holm": 1.8292436864416535e-13
+      },
+      {
+        "family": "F5_paired_feature_level",
+        "comparison": "bundled_baseline vs feature_sampling",
+        "metric": "mean_rank",
+        "unit": "encoded feature (paired across conditions)",
+        "n_pairs": 122,
+        "n_nonzero_differences": 115,
+        "median_difference_right_minus_left": -0.03499999999999659,
+        "median_diff_ci95": [
+          -0.370000000000001,
+          0.08499999999999996
+        ],
+        "p_value": 0.543857282567508,
+        "effect_rank_biserial": -0.06521739130434782,
+        "effect_direction": "positive = right condition larger",
+        "p_holm": 1.0
+      },
+      {
+        "family": "F5_paired_feature_level",
+        "comparison": "bundled_baseline vs feature_sampling",
+        "metric": "rank_variance",
+        "unit": "encoded feature (paired across conditions)",
+        "n_pairs": 122,
+        "n_nonzero_differences": 115,
+        "median_difference_right_minus_left": -8.87715,
+        "median_diff_ci95": [
+          -31.03935,
+          -1.7394500000000004
+        ],
+        "p_value": 1.372011727435169e-09,
+        "effect_rank_biserial": -0.6509745127436282,
+        "effect_direction": "positive = right condition larger",
+        "p_holm": 5.488046909740676e-09
+      },
+      {
+        "family": "F5_paired_feature_level",
+        "comparison": "bundled_baseline vs feature_sampling",
+        "metric": "rank_range",
+        "unit": "encoded feature (paired across conditions)",
+        "n_pairs": 122,
+        "n_nonzero_differences": 97,
+        "median_difference_right_minus_left": -2.0,
+        "median_diff_ci95": [
+          -4.0,
+          -1.0
+        ],
+        "p_value": 3.796278159614974e-10,
+        "effect_rank_biserial": -0.7315379760151484,
+        "effect_direction": "positive = right condition larger",
+        "p_holm": 1.8981390798074872e-09
+      },
+      {
+        "family": "F5_paired_feature_level",
+        "comparison": "row_sampling vs feature_sampling",
+        "metric": "mean_rank",
+        "unit": "encoded feature (paired across conditions)",
+        "n_pairs": 122,
+        "n_nonzero_differences": 113,
+        "median_difference_right_minus_left": 0.035000000000003695,
+        "median_diff_ci95": [
+          0.0,
+          0.43499999999999517
+        ],
+        "p_value": 0.5773804728439671,
+        "effect_rank_biserial": -0.06039434870361745,
+        "effect_direction": "positive = right condition larger",
+        "p_holm": 1.0
+      },
+      {
+        "family": "F5_paired_feature_level",
+        "comparison": "row_sampling vs feature_sampling",
+        "metric": "rank_variance",
+        "unit": "encoded feature (paired across conditions)",
+        "n_pairs": 122,
+        "n_nonzero_differences": 113,
+        "median_difference_right_minus_left": 27.1323,
+        "median_diff_ci95": [
+          6.43,
+          49.813199999999995
+        ],
+        "p_value": 9.301410857717693e-12,
+        "effect_rank_biserial": -0.7388604253997827,
+        "effect_direction": "positive = right condition larger",
+        "p_holm": 5.580846514630616e-11
+      },
+      {
+        "family": "F5_paired_feature_level",
+        "comparison": "row_sampling vs feature_sampling",
+        "metric": "rank_range",
+        "unit": "encoded feature (paired across conditions)",
+        "n_pairs": 122,
+        "n_nonzero_differences": 111,
+        "median_difference_right_minus_left": 21.0,
+        "median_diff_ci95": [
+          12.487500000000011,
+          32.0
+        ],
+        "p_value": 2.2454090279055604e-12,
+        "effect_rank_biserial": -0.7673745173745173,
+        "effect_direction": "positive = right condition larger",
+        "p_holm": 1.5717863195338924e-11
+      }
+    ],
+    "F6": [
+      {
+        "family": "F6_jaccard_vs_cosine",
+        "condition": "bundled_baseline",
+        "unit": "applicant (paired metrics)",
+        "n": 100,
+        "median_jaccard": 0.762424,
+        "median_cosine": 0.9997795,
+        "median_difference_cosine_minus_jaccard": 0.23737950000000002,
+        "median_diff_ci95": [
+          0.19230500000000006,
+          0.25146500000000005
+        ],
+        "p_value": 9.044445868078014e-18,
+        "effect_rank_biserial": -0.9889108910891089,
+        "n_nonzero_differences": 100,
+        "p_holm": 1.4666800083446064e-17
+      },
+      {
+        "family": "F6_jaccard_vs_cosine",
+        "condition": "row_sampling",
+        "unit": "applicant (paired metrics)",
+        "n": 100,
+        "median_jaccard": 0.681332,
+        "median_cosine": 0.999999,
+        "median_difference_cosine_minus_jaccard": 0.3186669999999999,
+        "median_diff_ci95": [
+          0.3186669999999999,
+          0.3186669999999999
+        ],
+        "p_value": 1.523970604832094e-23,
+        "effect_rank_biserial": -1.0,
+        "n_nonzero_differences": 100,
+        "p_holm": 4.5719118144962815e-23
+      },
+      {
+        "family": "F6_jaccard_vs_cosine",
+        "condition": "feature_sampling",
+        "unit": "applicant (paired metrics)",
+        "n": 100,
+        "median_jaccard": 0.8259745000000001,
+        "median_cosine": 0.99978,
+        "median_difference_cosine_minus_jaccard": 0.17378300000000002,
+        "median_diff_ci95": [
+          0.14989600000000003,
+          0.20348299999999997
+        ],
+        "p_value": 7.333400041723032e-18,
+        "effect_rank_biserial": -0.9916831683168317,
+        "n_nonzero_differences": 100,
+        "p_holm": 1.4666800083446064e-17
+      }
+    ],
+    "F7": [
+      {
+        "family": "F7_paired_local_jaccard",
+        "comparison": "bundled_baseline vs row_sampling",
+        "unit": "applicant (paired across conditions)",
+        "n_pairs": 100,
+        "mean_jaccard_left": 0.8115296999999999,
+        "mean_jaccard_right": 0.681332,
+        "median_difference_right_minus_left": -0.08109199999999994,
+        "median_diff_ci95": [
+          -0.12620999999999993,
+          -0.06695099999999993
+        ],
+        "p_value": 1.7925524750007822e-16,
+        "effect_rank_biserial": -0.9485148514851485,
+        "n_nonzero_differences": 100,
+        "p_holm": 3.5851049500015643e-16
+      },
+      {
+        "family": "F7_paired_local_jaccard",
+        "comparison": "bundled_baseline vs feature_sampling",
+        "unit": "applicant (paired across conditions)",
+        "n_pairs": 100,
+        "mean_jaccard_left": 0.8115296999999999,
+        "mean_jaccard_right": 0.8453355799999999,
+        "median_difference_right_minus_left": 0.02895099999999995,
+        "median_diff_ci95": [
+          0.018364999999999965,
+          0.042088000000000014
+        ],
+        "p_value": 7.196501486256056e-12,
+        "effect_rank_biserial": -0.8141097424412094,
+        "n_nonzero_differences": 94,
+        "p_holm": 7.196501486256056e-12
+      },
+      {
+        "family": "F7_paired_local_jaccard",
+        "comparison": "row_sampling vs feature_sampling",
+        "unit": "applicant (paired across conditions)",
+        "n_pairs": 100,
+        "mean_jaccard_left": 0.681332,
+        "mean_jaccard_right": 0.8453355799999999,
+        "median_difference_right_minus_left": 0.14464249999999995,
+        "median_diff_ci95": [
+          0.11492549999999996,
+          0.16857149999999993
+        ],
+        "p_value": 3.886460858818008e-18,
+        "effect_rank_biserial": -1.0,
+        "n_nonzero_differences": 100,
+        "p_holm": 1.1659382576454024e-17
+      }
+    ]
+  },
+  "global_vs_local_descriptive": [
+    {
+      "condition": "bundled_baseline",
+      "kendalls_w": 0.894822,
+      "mean_local_jaccard": 0.8115296999999999,
+      "mean_local_cosine": 0.99977373
+    },
+    {
+      "condition": "row_sampling",
+      "kendalls_w": 0.98547,
+      "mean_local_jaccard": 0.681332,
+      "mean_local_cosine": 0.9999990000000003
+    },
+    {
+      "condition": "feature_sampling",
+      "kendalls_w": 0.934871,
+      "mean_local_jaccard": 0.8453355799999999,
+      "mean_local_cosine": 0.9997772900000002
+    }
+  ]
+}

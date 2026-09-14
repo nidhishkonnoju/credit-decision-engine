@@ -133,17 +133,23 @@ def build_preprocessed_data(
     dataset_dir: str | Path = DATASET_DIR,
     test_size: float = 0.2,
     random_state: int = 42,
+    include_audited_proxies: bool = False,
 ):
-    """Return the cleaned dataset and train/test splits ready for modeling."""
+    """Return cleaned data and reproducible train/test splits.
+
+    ``include_audited_proxies`` exists only for the isolated research protocol.
+    It must remain false for the decision-support model: the production feature
+    policy excludes the audited near-perfect target proxies.
+    """
     df = load_credit_data(dataset_dir)
     df = handle_missing_sentinels(df)
     df = define_binary_target(df)
 
+    excluded_columns = PROTECTED_COLUMNS | (set() if include_audited_proxies else AUDITED_LABEL_PROXY_COLUMNS)
     feature_columns = [
         column
         for column in df.columns
-        if column not in PROTECTED_COLUMNS
-        and column not in AUDITED_LABEL_PROXY_COLUMNS
+        if column not in excluded_columns
         and column != "target"
     ]
 
@@ -177,6 +183,7 @@ def build_preprocessed_data(
         "positive_rate": float(y.mean()),
         "train_positive_rate": float(y_train.mean()),
         "test_positive_rate": float(y_test.mean()),
+        "includes_audited_proxies": include_audited_proxies,
     }
 
 

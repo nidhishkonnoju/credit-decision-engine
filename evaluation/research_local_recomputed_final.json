@@ -1,0 +1,144 @@
+{
+  "source_raw": "evaluation\\research_raw_100_seeds_final.npz",
+  "source_aggregate": "evaluation\\research_results_100_seeds_final.json",
+  "top_k": 5,
+  "degeneracy_rule": "across-applicant SD < 1e-09",
+  "conditions": {
+    "determinism_check": {
+      "n_seeds": 2,
+      "n_applicants": 100,
+      "n_features": 122,
+      "jaccard": {
+        "mean": 1.0,
+        "median": 1.0,
+        "sd_across_applicants": 0.0,
+        "min": 1.0,
+        "max": 1.0,
+        "n_distinct_applicant_means_6dp": 1,
+        "degenerate": true
+      },
+      "cosine": {
+        "mean": 1.0,
+        "median": 1.0,
+        "sd_across_applicants": 0.0,
+        "min": 1.0,
+        "max": 1.0,
+        "n_distinct_applicant_means_6dp": 1,
+        "degenerate": true
+      },
+      "per_seed_distinct_topk_sets": {
+        "min": 1,
+        "max": 1,
+        "n_seeds_with_single_applicant_invariant_set": 2
+      },
+      "consistency_with_aggregate": {
+        "jaccard_max_abs_diff": 0.0,
+        "cosine_max_abs_diff": 0.0,
+        "global_mean_rank_max_abs_diff": 0.0,
+        "global_rank_variance_max_abs_diff": 0.0
+      }
+    },
+    "bundled_baseline": {
+      "n_seeds": 100,
+      "n_applicants": 100,
+      "n_features": 122,
+      "jaccard": {
+        "mean": 0.8115297017797019,
+        "median": 0.7624242424242424,
+        "sd_across_applicants": 0.10732557309739245,
+        "min": 0.6107455507455507,
+        "max": 1.0,
+        "n_distinct_applicant_means_6dp": 89,
+        "degenerate": false
+      },
+      "cosine": {
+        "mean": 0.9997737447825346,
+        "median": 0.9997797705368563,
+        "sd_across_applicants": 6.307046377601957e-05,
+        "min": 0.9993449773932949,
+        "max": 0.9999003297511977,
+        "n_distinct_applicant_means_6dp": 71,
+        "degenerate": false
+      },
+      "per_seed_distinct_topk_sets": {
+        "min": 17,
+        "max": 36,
+        "n_seeds_with_single_applicant_invariant_set": 0
+      },
+      "consistency_with_aggregate": {
+        "jaccard_max_abs_diff": 4.906204905674727e-07,
+        "cosine_max_abs_diff": 4.995836393462127e-07,
+        "global_mean_rank_max_abs_diff": 0.0,
+        "global_rank_variance_max_abs_diff": 5.684341886080801e-13
+      }
+    },
+    "row_sampling": {
+      "n_seeds": 100,
+      "n_applicants": 100,
+      "n_features": 122,
+      "jaccard": {
+        "mean": 0.681331569664903,
+        "median": 0.6813315696649029,
+        "sd_across_applicants": 1.1102230246251565e-16,
+        "min": 0.6813315696649029,
+        "max": 0.6813315696649029,
+        "n_distinct_applicant_means_6dp": 1,
+        "degenerate": true
+      },
+      "cosine": {
+        "mean": 0.9999990254193846,
+        "median": 0.999999025445996,
+        "sd_across_applicants": 1.309635685864317e-09,
+        "min": 0.9999990236518359,
+        "max": 0.9999990299253753,
+        "n_distinct_applicant_means_6dp": 1,
+        "degenerate": false
+      },
+      "per_seed_distinct_topk_sets": {
+        "min": 1,
+        "max": 1,
+        "n_seeds_with_single_applicant_invariant_set": 100
+      },
+      "consistency_with_aggregate": {
+        "jaccard_max_abs_diff": 4.303350971124331e-07,
+        "cosine_max_abs_diff": 2.992537528889727e-08,
+        "global_mean_rank_max_abs_diff": 0.0,
+        "global_rank_variance_max_abs_diff": 3.979039320256561e-13
+      }
+    },
+    "feature_sampling": {
+      "n_seeds": 100,
+      "n_applicants": 100,
+      "n_features": 122,
+      "jaccard": {
+        "mean": 0.8453356180856182,
+        "median": 0.825974025974026,
+        "sd_across_applicants": 0.08931989898503266,
+        "min": 0.7037012987012987,
+        "max": 1.0,
+        "n_distinct_applicant_means_6dp": 91,
+        "degenerate": false
+      },
+      "cosine": {
+        "mean": 0.9997772809347719,
+        "median": 0.9997801144195326,
+        "sd_across_applicants": 6.059710563947566e-05,
+        "min": 0.9995521230167813,
+        "max": 0.9999276841770519,
+        "n_distinct_applicant_means_6dp": 81,
+        "degenerate": false
+      },
+      "per_seed_distinct_topk_sets": {
+        "min": 17,
+        "max": 33,
+        "n_seeds_with_single_applicant_invariant_set": 0
+      },
+      "consistency_with_aggregate": {
+        "jaccard_max_abs_diff": 4.983164982874655e-07,
+        "cosine_max_abs_diff": 4.978578163061798e-07,
+        "global_mean_rank_max_abs_diff": 0.0,
+        "global_rank_variance_max_abs_diff": 7.958078640513122e-13
+      }
+    }
+  }
+}

@@ -34,7 +34,7 @@ class ModelingSmokeTest(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.data = build_preprocessed_data()
-        cls.model_result = fit_credit_model(cls.data)
+        cls.model_result = fit_credit_model(cls.data, stability_n_seeds=5, cross_validation_folds=2)
 
     def test_model_and_decision_summary_are_produced(self):
         self.assertIn("model", self.model_result)
