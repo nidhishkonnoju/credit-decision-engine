@@ -51,6 +51,4 @@ Run all cells top to bottom (Python 3.12; Kaggle authentication may be needed). 
 
 ## License
 
-## License
-
 Code released under the MIT License (see `LICENSE`). The dataset is subject to its Kaggle terms.
